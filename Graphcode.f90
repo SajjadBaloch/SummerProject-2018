@@ -400,6 +400,7 @@ subroutine Orbit(y0,y,f)
 			print '(F7.3,"%",A,F5.3,A)', t/ttot*1d2,' - t = ',t/tdyn,' tdyn'	! Display % complete
 			i=i+1
 			write(1,*) y(1:N3),t,dt,delta		! Write data to file
+!			if (mod(i,100)==0) call SYSTEM("ipython Spacetime.py")
 		endif
 		call RK4(y,t,dt,r,v,z)					! Integrate y using the RK4 technique
 		call Boundary(y)							! Check against boundary conditions
