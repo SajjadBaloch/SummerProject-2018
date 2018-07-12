@@ -5,10 +5,10 @@ module Constants
 !--------------------------------------------------------------------------------------------------
 	implicit none
 	integer,parameter :: N=50					! Number of bodies
-	integer,parameter :: k=3					! Locate the kth nearest particle (k<N)
+	integer,parameter :: k=5					! Locate the kth nearest particle (k<N)
 	integer,parameter :: Np=2d3				! Number of data points to write
 	real*8,parameter :: Ntdyn=2d0				! Number of dynamical timescales to iterate over
-	character(len=99),parameter :: nam="MC_PNMix_N50"	! Start of File Name
+	character(len=99),parameter :: nam="MC_AP_N50"	! Start of File Name
 	character(len=99),parameter :: dat=trim(nam)//"_Data.dat"	! Name of file to save data to
 	character(len=99),parameter :: mass=trim(nam)//"_Signs.dat"	! File to save mass signs to
 	real*8,parameter :: alpha=1d-3			! Dimensionless parameter for adjusted time step
@@ -110,7 +110,7 @@ subroutine Set_Masses
 	! Assign a value to each mass [Msolar]
 	M = vol*1d12
 	! Set half the masses negative
-	M(1+N/2:) = -M(1+N/2:)
+!	M(1+N/2:) = -M(1+N/2:)
 	! Store the sign of each mass for python to reference
 	s=dsign(1d0,M)
 	! Assign Masses according to desired signs
@@ -351,8 +351,7 @@ subroutine Accelerations(y,a,r,v,z)
 			enddo
 		enddo
 !		drag = -2d0*H(z)*v(:,j)
-		drag = 0d0
-		a(1+vari(j):3+vari(j)) = a(1+vari(j):3+vari(j))+grav+drag
+		a(1+vari(j):3+vari(j)) = a(1+vari(j):3+vari(j))+grav!+drag
 	enddo
 	
 end subroutine Accelerations
@@ -401,6 +400,7 @@ subroutine Orbit(y0,y,f)
 			print '(F7.3,"%",A,F5.3,A)', t/ttot*1d2,' - t = ',t/tdyn,' tdyn'	! Display % complete
 			i=i+1
 			write(1,*) y(1:N3),t,dt,delta		! Write data to file
+			if (mod(i,100)==0) call SYSTEM("ipython Spacetime.py")
 		endif
 		call RK4(y,t,dt,r,v,z)					! Integrate y using the RK4 technique
 		call Boundary(y)							! Check against boundary conditions

@@ -1,14 +1,11 @@
 import matplotlib.pylab as plt
-import numpy as np
 import sys
-#from mpl_toolkits.mplot3d import Axes3D
-from matplotlib import animation
 from matplotlib import rc
 
 # Save the plot?
 save=False
 # Plot the mirror copies of the data?
-Multi=False
+Multi=True
 # Filenames
 File  = 'MC_PNMix_N50'
 Dat   = File+'_Data'				# The Plot Data
