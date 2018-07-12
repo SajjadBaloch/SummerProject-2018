@@ -5,7 +5,7 @@ module Constants
 !--------------------------------------------------------------------------------------------------
 	implicit none
 	integer,parameter :: N=50					! Number of bodies
-	integer,parameter :: k=3					! Locate the kth nearest particle (k<N)
+	integer,parameter :: k=5					! Locate the kth nearest particle (k<N)
 	integer,parameter :: Np=2d3				! Number of data points to write
 	real*8,parameter :: Ntdyn=2d0				! Number of dynamical timescales to iterate over
 	character(len=99),parameter :: nam="MC_AP_N50"	! Start of File Name
@@ -351,8 +351,7 @@ subroutine Accelerations(y,a,r,v,z)
 			enddo
 		enddo
 !		drag = -2d0*H(z)*v(:,j)
-		drag = 0d0
-		a(1+vari(j):3+vari(j)) = a(1+vari(j):3+vari(j))+grav+drag
+		a(1+vari(j):3+vari(j)) = a(1+vari(j):3+vari(j))+grav!+drag
 	enddo
 	
 end subroutine Accelerations
