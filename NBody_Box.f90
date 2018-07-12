@@ -4,10 +4,10 @@ module Constants
 ! Module to keep constants in
 !--------------------------------------------------------------------------------------------------
 	implicit none
-	integer,parameter :: N=2					! Number of bodies
-	integer,parameter :: k=1					! Locate the kth nearest particle
-	integer,parameter :: Np=1d4				! Number of data points to write
-	real*8,parameter :: Ntdyn=3d0				! Number of dynamical timescales to iterate over
+	integer,parameter :: N=10					! Number of bodies
+	integer,parameter :: k=5					! Locate the kth nearest particle
+	integer,parameter :: Np=1d3				! Number of data points to write
+	real*8,parameter :: Ntdyn=2d0				! Number of dynamical timescales to iterate over
 	character(len=99),parameter :: nam="Plot"	! Start of File Name
 	character(len=99),parameter :: dat=trim(nam)//"_Data.dat"	! Name of file to save data to
 	character(len=99),parameter :: mass=trim(nam)//"_Signs.dat"	! File to save mass signs to
@@ -150,7 +150,7 @@ subroutine init_cond(y0)
 	! Pseudo-randomly set initial values for the solution vector y(t=0)
 	do i=1,N
 		! Select desired distribution
-		goto 30
+		goto 20
 		! Seperate +ve and -ve Mass particles
 10		if (M(i) .gt. 0d0) then 
 			y0(1+vari(i)) = RNG(0d0,rmax)		! x-positions
@@ -350,7 +350,11 @@ subroutine Accelerations(y,acc,r,v,z)
 			do k=1,27
 				rirj = (r(:,i)+offset(:,k))-r(:,j)
 				magrirj2 = mag_rirj(r,i,j,k)*mag_rirj(r,i,j,k)
-				dist3 = (magrirj2+soft*soft)**(1.5)	! (Mag(ri-rj)^2 + Epsilon^2)^(3/2)
+				if(magrirj2 .le. soft) then
+					dist3 = (magrirj2+soft*soft)**(1.5)	! (Mag(ri-rj)^2 + Epsilon^2)^(3/2)
+				else
+					dist3 = magrirj2**1.5
+				endif
 				grav = grav+GMj*MA(i)*rirj/dist3
 			enddo
 		enddo
@@ -405,6 +409,7 @@ subroutine Orbit(y0,y,f)
 			print '(F7.3,"%",A,F5.3,A)', t/ttot*1d2,' - t = ',t/tdyn,' tdyn'	! Display % complete
 			write(1,*) y(1:N3),t,dt,delta		! Write data to file
 			i=i+1
+!			if (mod(i,Np/10)==0) call SYSTEM("ipython Spacetime.py")
 		endif
 		call RK4(y,t,dt,r,v,z)					! Integrate y using the RK4 technique
 		call Boundary(y)							! Check against boundary conditions
