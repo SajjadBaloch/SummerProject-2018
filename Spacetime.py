@@ -1,8 +1,5 @@
 import matplotlib.pylab as plt
-import numpy as np
 import sys
-#from mpl_toolkits.mplot3d import Axes3D
-from matplotlib import animation
 from matplotlib import rc
 
 # Save the plot?
