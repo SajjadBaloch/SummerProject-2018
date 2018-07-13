@@ -11,7 +11,7 @@ from decimal import Decimal
 # Save the plot?
 save=False
 # Files To Open
-File='9Jun_1Hv'
+File='Plot'
 Dat=File+'_Data.dat'
 Image = Dat +'_TimestepPlot'	# Name of the Image to Save
 
@@ -79,7 +79,8 @@ ax=plt.axes(xlim=(tmin,tmax),ylim=(dtmin,dtmax))
 plot=ax.plot(t,dt,marker='.',linestyle='none',markersize=s)
 ax.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.2e'))
 ax.axhline(y=min(dt),linestyle='dashed',color='k',lw=lw)
-
+#ax.set_yscale('log')
+#ax.set_xscale('log')
 
 # Set axes labels
 plt.xlabel('t/tdyn',size=txt)

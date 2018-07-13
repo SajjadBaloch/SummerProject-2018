@@ -4,9 +4,9 @@ module Constants
 ! Module to keep constants in
 !--------------------------------------------------------------------------------------------------
 	implicit none
-	integer,parameter :: N=10					! Number of bodies
-	integer,parameter :: k=5					! Locate the kth nearest particle
-	integer,parameter :: Np=1d3				! Number of data points to write
+	integer,parameter :: N=2					! Number of bodies
+	integer,parameter :: k=1					! Locate the kth nearest particle
+	integer,parameter :: Np=2d3				! Number of data points to write
 	real*8,parameter :: Ntdyn=2d0				! Number of dynamical timescales to iterate over
 	character(len=99),parameter :: nam="Plot"	! Start of File Name
 	character(len=99),parameter :: dat=trim(nam)//"_Data.dat"	! Name of file to save data to
@@ -110,13 +110,16 @@ subroutine Set_Masses
 	! Assign a value to each mass [Msolar]
 	M = vol*1d12
 	! Set half the masses negative
-!	M(N/2:) = -M(N/2:)
+!	M(1+N/2:) = -M(1+N/2:)
+	! Assign Masses according to desired signs
+	! To not violate equivalency principle, MP and MI must have same sign
+	MP = M				! Passive Gravitational Mass
+	MA = M				! Active Gravitational Mass
+	! Use dsign to automatically ensure equivalency principle is obeyed
+	MI = dsign(M,MP)	! Inertial Mass
 	! Store the sign of each mass for python to reference
 	s=dsign(1d0,M)
-	! Assign Masses according to desired signs
-	MP = M	! Passive Gravitational Mass
-	MA = M	! Active Gravitational Mass
-	MI = M	! Inertial Mass
+
 
 	! Total mass of the system [Msolar]
 	Mtot = sum(abs(M))
@@ -143,8 +146,8 @@ subroutine init_cond(y0)
 	integer :: i										! Iteration integer
 	
 	! Set the min and max desired values
-	rmin=-L/2d0; rmax=0d0!L/2d0
-	vmin=1d-3; vmax=vmin
+	rmin=-L/2d0; rmax=L/2d0
+	vmin=0d0; vmax=vmin
 	! Initialise the co-moving frame vectors
 	rc = 0.d0;vc = 0.d0
 	! Pseudo-randomly set initial values for the solution vector y(t=0)
@@ -177,10 +180,8 @@ subroutine init_cond(y0)
 		y0(3+vari(i)) = RNG(rmin,rmax)		! z-positions
 		goto 40
 		
-		! Place masses in a grid
-30		y0 = (/-L/3d0,5d0,5d0,-L/3d0,-5d0,-5d0,&
-				5d-7,0d0,0d0,5.1d-7,0d0,0d0/)
-		exit		
+		! Fix positions of particles
+30		goto 40
 				
 		! Assign initial velocities
 40		y0(1+N3vari(i)) = RNG(vmin,vmax)		! x-velocities
@@ -188,16 +189,14 @@ subroutine init_cond(y0)
 		y0(3+N3vari(i)) = RNG(vmin,vmax)		! z-velocities
 
 		! Generate the co-moving frame coordinates and velocities
-		rc = rc+(abs(M(i))/Mtot)*y0(1+vari(i):3+vari(i))				! Positions  [Mpc]
-		vc = vc+(abs(M(i))/Mtot)*y0(1+N3vari(i):3+N3vari(i))			! Velocities [Mpc/yr]
+!		rc = rc+(abs(M(i))/Mtot)*y0(1+vari(i):3+vari(i))				! Positions  [Mpc]
+!		vc = vc+(abs(M(i))/Mtot)*y0(1+N3vari(i):3+N3vari(i))			! Velocities [Mpc/yr]
 	enddo
 	! Transform to co-moving frame
-	do i=1,N
-		y0(1+vari(i):3+vari(i))=y0(1+vari(i):3+vari(i))-rc				! Position correction [Mpc]
-		y0(1+N3vari(i):3+N3vari(i))=y0(1+N3vari(i):3+N3vari(i))-vc	! Velocity correction [Mpc/yr]
-	enddo
-	! Make sure every particle is IN the box
-	call boundary(y0)
+!	do i=1,N
+!		y0(1+vari(i):3+vari(i))=y0(1+vari(i):3+vari(i))-rc				! Position correction [Mpc]
+!		y0(1+N3vari(i):3+N3vari(i))=y0(1+N3vari(i):3+N3vari(i))-vc	! Velocity correction [Mpc/yr]
+!	enddo
 	
 end subroutine init_cond
 
@@ -261,26 +260,35 @@ subroutine Boundary(y)
 	integer :: i
 	integer,external :: vari
 	real*8 :: BC=L/2d0						! Boundary Condition (edge of box)
+	integer :: xind,yind,zind				! Dummy variables
 	
 	do i=1,N
+		! Position indeces to reference
+		xind = 1+vari(i)
+		yind = 2+vari(i)
+		zind = 3+vari(i)
 		! Check solution vector y against the boundary conditions for each particle
-		if (y(1+vari(i))>BC) then			! Check x-coordinate
-			y(1+vari(i))=y(1+vari(i))-L	! Make adjustment to put inside box
-		elseif (y(1+vari(i))<-BC) then
-			y(1+vari(i))=y(1+vari(i))+L
-		endif
-		
-		if (y(2+vari(i))>BC) then			! Check y-coordinate
-			y(2+vari(i))=y(2+vari(i))-L	! Make adjustment to put inside box
-		elseif (y(2+vari(i))<-BC) then
-			y(2+vari(i))=y(2+vari(i))+L
-		endif
-		
-		if (y(3+vari(i))>BC) then			! Check z-coordinate
-			y(3+vari(i))=y(3+vari(i))-L	! Make adjustment to put inside box
-		elseif (y(3+vari(i))<-BC) then
-			y(3+vari(i))=y(3+vari(i))+L
-		endif
+		! Check x-coordinate
+		do while (y(xind) .gt. BC)
+			y(xind)=y(xind)-L
+		enddo
+		do while (y(xind) .lt.-BC)
+			y(xind)=y(xind)+L
+		enddo
+		! Check y-coordinate
+		do while (y(yind) .gt. BC)
+			y(yind)=y(yind)-L
+		enddo
+		do while (y(yind) .lt. -BC)
+			y(yind)=y(yind)+L
+		enddo
+		! Check z-coordinate
+		do while (y(zind) .gt. BC)
+			y(zind)=y(zind)-L
+		enddo
+		do while (y(zind) .lt. -BC)
+			y(zind)=y(zind)+L
+		enddo
 	enddo
 
 end subroutine Boundary
@@ -296,7 +304,7 @@ subroutine RHS(y,f,r,v,z)
 	real*8,intent(out) :: f(Ndim)			! RHS vector f is output
 	real*8,dimension(3,N),intent(inout) :: r,v
 	real*8,intent(in)  :: z					! Redshift
-	real*8,dimension(N3) :: acc				! Array of accelerations on each object
+	real*8,dimension(N3) :: acc			! Array of accelerations on each object
 	
 	! Calculate the acceleration of each body
 	call Accelerations(y,acc,r,v,z)
@@ -337,7 +345,7 @@ subroutine Accelerations(y,acc,r,v,z)
 		v(:,i) = y(1+N3vari(i):3+N3vari(i))		! (vx,vy,vz) of Body i [Mpc/yr]
 	enddo
 
-	soft = 0d0!0.98*dble(N)**(-0.28)
+	soft = 0.98*dble(N)**(-0.28)
 
 	! Calculate the resulting gravitational accelerations of each body [Msolar*Mpc/yr^2]
 	! Calculated via force on body j due to each other body i!=j 
@@ -346,7 +354,7 @@ subroutine Accelerations(y,acc,r,v,z)
 		GMj = MP(j)/MI(j)*G
 		grav=0d0
 		do i=1,N
-			if (i==j) cycle
+			if (i .eq. j) cycle
 			do k=1,27
 				rirj = (r(:,i)+offset(:,k))-r(:,j)
 				magrirj2 = mag_rirj(r,i,j,k)*mag_rirj(r,i,j,k)
@@ -355,10 +363,10 @@ subroutine Accelerations(y,acc,r,v,z)
 				else
 					dist3 = magrirj2**1.5
 				endif
-				grav = grav+GMj*MA(i)*rirj/dist3
+				grav = grav+MA(i)*rirj/dist3
 			enddo
 		enddo
-		grav = grav/a(z)/a(z)
+		grav = grav*GMj/a(z)/a(z)
 		drag = -2d0*H(z)*v(:,j)
 		acc(1+vari(j):3+vari(j)) = acc(1+vari(j):3+vari(j))+grav+drag
 	enddo
@@ -373,7 +381,7 @@ subroutine Orbit(y0,y,f)
 	use Constants, only: N,Np,Ntdyn,dat,mass,Ndim,N3,L,Mtot,G
 	implicit none
 	real*8,intent(inout),dimension(Ndim) :: y0,y,f
-	real*8,external :: dz
+	real*8,external :: dz,a
 	real*8,dimension(3,N) :: r,v				! Position and velocity vectors
 	real*8 :: rhobar								! Average density [Msolar/Mpc^3]
 	real*8,dimension(N) :: rho					! Local density [Msolar/Mpc^3]
@@ -387,8 +395,11 @@ subroutine Orbit(y0,y,f)
 	real*8,dimension(N) :: delta				! Ratio between rho and rhobar
 	real*8,dimension(N,N) :: magr				! Store distances to each other body
 	
-	y=y0	 											! Initialise position vector y
-	call RHS(y0,f,r,v,z)							! Initialise f
+	y=y0/a(z)										! Initialise position vector y
+	! Make sure every particle is IN the box
+	call boundary(y)
+	call RHS(y,f,r,v,z)							! Initialise f
+	
 	! Set the total length of time to integrate over
 	rhobar  = Mtot/L/L/L			![Msolar/Mpc^3]
 	tdyn = 1d0/sqrt(rhobar*G)	![yrs]
@@ -408,8 +419,8 @@ subroutine Orbit(y0,y,f)
 			delta=rho/rhobar
 			print '(F7.3,"%",A,F5.3,A)', t/ttot*1d2,' - t = ',t/tdyn,' tdyn'	! Display % complete
 			write(1,*) y(1:N3),t,dt,delta		! Write data to file
+			if (mod(i,Np/10) .eq. 0 .AND. i .ne. 0) call SYSTEM("python Spacetime.py")
 			i=i+1
-!			if (mod(i,Np/10)==0) call SYSTEM("ipython Spacetime.py")
 		endif
 		call RK4(y,t,dt,r,v,z)					! Integrate y using the RK4 technique
 		call Boundary(y)							! Check against boundary conditions
@@ -449,7 +460,7 @@ subroutine Timestep(r,v,dt,dtmin,magr)
 	magr=0.d0;magv=0.d0;ratio=0.d0;
 	do i=1,N
 		do j=1,N
-			if (j==i) cycle
+			if (j .eq. i) cycle
 			magr(j,i) = mag_rirj(r,i,j,1)
 			magv = mag_vivj(v,i,j)
 			if (magv .eq. 0d0) then
@@ -459,7 +470,7 @@ subroutine Timestep(r,v,dt,dtmin,magr)
 			endif
 		enddo
 	enddo
-	dt = alpha*minval(ratio,mask=ratio>0.d0) ! Mask ensures diagonal of matrix is ignored
+	dt = alpha*minval(ratio,mask=ratio .gt. 0.d0) ! Mask ensures diagonal of matrix is ignored
 
 end subroutine Timestep
 

@@ -5,12 +5,12 @@ from matplotlib.pyplot import cm
 from matplotlib import animation
 import matplotlib.patches as patches
 
-interval=10	# Interval between frames in ms
+interval=100	# Interval between frames in ms
 sel=1			# To skip data points (to speed up animation)
 rep=False		# Animation repeats?
-Multi=False	# Multiple copies of the central box?
+Multi=True	# Multiple copies of the central box?
 # Files to open
-File  = 'MC_PNMix_N50'
+File  = 'Plot'
 Dat   = File+'_Data.dat'				# The Plot Data
 Signs = File+'_Signs.dat'			# Signs of the Masses
 
@@ -71,7 +71,7 @@ if (sel>1):
 
 # Setup the plot figure
 fig=plt.figure(figsize=(12,12))
-ax=plt.axes(xlim=(-lim,lim),ylim=(-10.,10.))
+ax=plt.axes(xlim=(-lim,lim),ylim=(-lim,lim))
 
 plots = [ax.plot([],[],marker='.',color=colors[i])[0] for i in xrange(N)]
 plots2 = [ax.plot([],[],marker='.',color=colors[i])[0] for i in xrange(N)]

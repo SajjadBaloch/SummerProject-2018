@@ -5,9 +5,9 @@ from matplotlib import rc
 # Save the plot?
 save=False
 # Plot the mirror copies of the data?
-Multi=True
+Multi=False
 # Filenames
-File  = 'MC_AP_N50'
+File  = 'Plot'
 Dat   = File+'_Data'				# The Plot Data
 Signs = File+'_Signs'			# Signs of the Masses
 Image = File+'_SpacetimePlot'	# Name of the Image to Save
@@ -118,7 +118,7 @@ ax9=plt.subplot2grid((nrows,ncols),(2,3),rowspan=1,colspan=1,sharex=ax1,sharey=a
 
 # Plot the data
 for i in xrange(N):
-	if (i % N == 0):
+	if (i % 5 == 0):
 		percent=float(i)/float(N)*100.
 		print str(percent)+'%'
 	

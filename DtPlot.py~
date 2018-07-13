@@ -79,7 +79,8 @@ ax=plt.axes(xlim=(tmin,tmax),ylim=(dtmin,dtmax))
 plot=ax.plot(t,dt,marker='.',linestyle='none',markersize=s)
 ax.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.2e'))
 ax.axhline(y=min(dt),linestyle='dashed',color='k',lw=lw)
-
+ax.set_yscale('log')
+#ax.set_xscale('log')
 
 # Set axes labels
 plt.xlabel('t/tdyn',size=txt)
