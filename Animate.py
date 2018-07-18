@@ -1,14 +1,11 @@
 import matplotlib.pylab as plt
-import numpy as np
 import sys
-from matplotlib.pyplot import cm
 from matplotlib import animation
-import matplotlib.patches as patches
 
 interval=10	# Interval between frames in ms
 sel=1			# To skip data points (to speed up animation)
 rep=False		# Animation repeats?
-Multi=False	# Multiple copies of the central box?
+Multi=True	# Multiple copies of the central box?
 # Files to open
 File  = 'Plot'
 Dat   = File+'_Data.dat'				# The Plot Data
@@ -41,8 +38,6 @@ read = f.readline()
 f.close
 signs = [float(read.split()[i]) for i in xrange(N)]
 colors=[0 for i in xrange(N)]
-pos=cm.Blues(np.linspace(0,1,N))
-neg=cm.Reds(np.linspace(0,1,N))
 for i in xrange(N):
 	if (signs[i]>0):
 		colors[i] = 'b'

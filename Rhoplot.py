@@ -1,12 +1,7 @@
 import matplotlib.pylab as plt
 import matplotlib.ticker as mtick
-import numpy as np
 import sys
-from matplotlib.pyplot import cm
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib import animation
 from matplotlib import rc
-from decimal import Decimal
 
 # Save the plot?
 save=False
@@ -17,10 +12,10 @@ Signs = File+'_Signs'			# Signs of the Masses
 Image = Dat +'_DensityPlot'	# Name of the Image to Save
 
 # Customisation variables
-s=1			# Marker size
-lw=1		# Line width
+s=1.5			# Marker size
+lw=1			# Line width
 txt=16 		# Plot label text size
-lblpad=10		# Plot label padding
+lblpad=11	# Plot label padding
 tick=12		# Tick text size
 tickh=12		# Tick size
 pad=1			# Tick padding
@@ -68,6 +63,9 @@ print '===Generating Plots==='
 
 tmin  = min(t)
 tmax  = max(t)+0.01
+dmin  = 0.5*10**(-1)
+dmax  = 2*10**4
+
 
 # Customisation
 plt.rc('path',simplify=True)
@@ -81,29 +79,30 @@ plt.rc('ytick.major',size=tickh,width=lw,pad=pad)
 # Set up the plot
 plt.figure(figsize=(24,12))
 
-ax=plt.axes(xlim=(tmin,tmax))
+ax=plt.axes(xlim=(tmin,tmax))#,ylim=(dmin,dmax))
 for i in xrange(N):
-	ax.plot(t,delta[i],color=colors[i],marker='o',ms=s,lw=0.5,ls='none')
-	ax.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.2e'))
-	ax.set_yscale('log')
+	ax.plot(t,delta[i],ls='solid',lw=1,color=colors[i])
+
+ax.hlines(1,tmin,tmax,linestyles='dashed',lw=1.2)
+ax.set_yscale('log')
 
 # Set axes labels
 plt.xlabel('t/tdyn',size=txt)
-plt.ylabel(r'$\log\delta$',size=1.3*txt)
+plt.ylabel(r'$\delta=\frac{\rho}{\bar{\rho}}$',size=1.3*txt)
 
 # Set plot titles	
-ax.set_title('Local Densities',size=1.5*txt)
+ax.set_title('Local Densities - '+File,size=1.5*txt)
 
 # Set Plot Legend
 pos_mass = plt.scatter([],[],s=3*s,color='b',marker='.',linewidths=s,label='+ve Mass')
 neg_mass = plt.scatter([],[],s=3*s,color='r',marker='.',linewidths=s,label='-ve Mass')
 ax.legend(handles=[pos_mass,neg_mass],bbox_to_anchor=(0.,1.,1.,.075),loc=2,borderaxespad=0.,fontsize=0.8*txt,frameon=False)
 
-print '====Plots Generated==='
+print '===Plots Generated===='
 # Save the figure
 if (save):
 	plt.savefig('/home/echo/cbm7/Summer_Project/Graphs/'+Image)
-	print '======Image Saved====='
+	print '=====Image Saved======'
 else:
 	# Show the Figure
 	plt.show()

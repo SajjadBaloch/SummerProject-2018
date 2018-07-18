@@ -8,7 +8,7 @@ module Constants
 	integer,parameter :: k=5					! Locate the kth nearest particle (k<N)
 	integer,parameter :: Np=2d3				! Number of data points to write
 	real*8,parameter :: Ntdyn=2d0				! Number of dynamical timescales to iterate over
-	character(len=99),parameter :: nam="SoftAP_N50"	! Start of File Name
+	character(len=99),parameter :: nam="Soft_Test"	! Start of File Name
 	character(len=99),parameter :: dat=trim(nam)//"_Data.dat"	! Name of file to save data to
 	character(len=99),parameter :: mass=trim(nam)//"_Signs.dat"	! File to save mass signs to
 	real*8,parameter :: alpha=1d-3			! Dimensionless parameter for adjusted time step
@@ -343,11 +343,11 @@ subroutine Accelerations(y,acc,r,v,z)
 			do k=1,27
 				rirj = (r(:,i)+offset(:,k))-r(:,j)
 				magrirj2 = mag_rirj(r,i,j,k)*mag_rirj(r,i,j,k)
-				if(magrirj2 .le. soft) then
+!				if(magrirj2 .le. soft) then
 					dist3 = (magrirj2+soft*soft)**(1.5)	! (Mag(ri-rj)^2 + Epsilon^2)^(3/2)
-				else
-					dist3 = magrirj2**1.5
-				endif
+!				else
+!					dist3 = magrirj2**1.5
+!				endif
 				grav = grav+MA(i)*rirj/dist3
 			enddo
 		enddo
@@ -478,12 +478,12 @@ subroutine LocalDensity(r,rho,magr)
 		! Initialise the search for body i's kth nearest body
 		search=(/magr(1:i-1,i),magr(i+1:,i)/)
 		mass=(/M(1:i-1),M(i+1:)/)
-		Mloc=M(i)
+		Mloc=abs(M(i))
 		do j=1,k
 			! Index of current minimum
 			ind=MINLOC(search,1)
 			! Add this body's mass to the local total
-			Mloc=Mloc+mass(nint(ind))
+			Mloc=Mloc+abs(mass(nint(ind)))
 			if (j .eq. k) exit	! Don't remove the kth element from search list
 			! Remove this minimum from search to find next minimum
 			search=(/search(1:nint(ind)-1),search(nint(ind)+1:)/)

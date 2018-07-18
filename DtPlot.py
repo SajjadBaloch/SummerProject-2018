@@ -1,17 +1,12 @@
 import matplotlib.pylab as plt
 import matplotlib.ticker as mtick
-import numpy as np
 import sys
-from matplotlib.pyplot import cm
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib import animation
 from matplotlib import rc
-from decimal import Decimal
 
 # Save the plot?
 save=False
 # Files To Open
-File='Plot'
+File='SoftAP_N50'
 Dat=File+'_Data.dat'
 Image = Dat +'_TimestepPlot'	# Name of the Image to Save
 
@@ -56,12 +51,6 @@ dtmin = min(dt)-max(dt)/50.
 dtmax = max(dt)+max(dt)/50.
 tmin  = min(t)-max(t)/50.
 tmax  = max(t)+max(t)/50.
-
-def format_e(n):
-	 a = '%E' % n
-	 return a.split('E')[0].rstrip('0').rstrip('.') + 'E' + a.split('E')[1]
-
-print format_e(Decimal(max(dt))), format_e(Decimal(min(dt)))
 
 # Customisation
 plt.rc('path',simplify=True)

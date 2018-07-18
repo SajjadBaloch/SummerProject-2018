@@ -5,7 +5,7 @@ from matplotlib import rc
 # Save the plot?
 save=False
 # Plot the mirror copies of the data?
-Multi=False
+Multi=True
 # Filenames
 File  = 'Plot'
 Dat   = File+'_Data'				# The Plot Data
@@ -231,7 +231,7 @@ ax4.set_ylim(-lim,lim)
 # Set plot titles	
 ax1.set_title('Initial Positions',size=1.2*txt)
 ax4.set_title(str(N)+'-Body Simulation; Data from file: '+Dat+'.dat',size=1.5*txt)
-#ax4.set_title('Implementation of Mirror Boxes',size=1.5*txt)
+#ax4.set_title('Force Softened - All +ve mass',size=1.5*txt)
 ax7.set_title('Final Positions',size=1.2*txt)
 
 # Set Plot Legend
