@@ -320,6 +320,7 @@ subroutine Accelerations(y,acc,r,v,z)
 	real*8,dimension(3) :: rirj					! Vector pointing from rj to ri (ri-rj)
 	real*8,dimension(3) :: grav					! Gravitational acceleration term
 	real*8,dimension(3) :: drag					! Hubble Drag term
+	real*8 :: gravcoeff,dragcoeff				! Coefficients
 
 	
 	! Store the positions and velocities of each body for easy reference
@@ -330,6 +331,9 @@ subroutine Accelerations(y,acc,r,v,z)
 
 	soft = 0.98*dble(N)**(-0.28)
 
+	gravcoeff = 1d0/a(z)/a(z)
+	dragcoeff = -2d0*H(z)!1d0*H(z)!
+	
 	! Calculate the resulting gravitational accelerations of each body [Msolar*Mpc/yr^2]
 	! Calculated via force on body j due to each other body i!=j 
 	acc = 0.d0
@@ -349,8 +353,8 @@ subroutine Accelerations(y,acc,r,v,z)
 				grav = grav+MA(i)*rirj/dist3
 			enddo
 		enddo
-		grav = grav*GMj/a(z)/a(z)
-		drag = -2d0*H(z)*v(:,j)!-1d0*H(z)*v(:,j)!
+		grav = gravcoeff*GMj*grav
+		drag = dragcoeff*v(:,j)
 		acc(1+vari(j):3+vari(j)) = acc(1+vari(j):3+vari(j))+grav+drag
 	enddo
 	
