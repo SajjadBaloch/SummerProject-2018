@@ -3,7 +3,7 @@ import sys
 from matplotlib import rc
 
 # Save the plot?
-save=True
+save=False
 # Plot the mirror copies of the data?
 Multi=True
 # Filenames

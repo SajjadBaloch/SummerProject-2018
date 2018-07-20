@@ -7,7 +7,7 @@ save=False
 # Plot the mirror copies of the data?
 Multi=True
 # Filenames
-File  = 'Plot'
+File  = 'N10_EulTest'
 Dat   = File+'_Data'				# The Plot Data
 Signs = File+'_Signs'			# Signs of the Masses
 Image = File+'_SpacetimePlot'	# Name of the Image to Save

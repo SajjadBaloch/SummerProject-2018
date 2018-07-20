@@ -4,11 +4,11 @@ module Constants
 ! Module to keep constants in
 !--------------------------------------------------------------------------------------------------
 	implicit none
-	integer,parameter :: N=100					! Number of bodies
+	integer,parameter :: N=10					! Number of bodies
 	integer,parameter :: k=5					! Locate the kth nearest particle
-	integer,parameter :: Np=2d3				! Number of data points to write
+	integer,parameter :: Np=1d4				! Number of data points to write
 	real*8,parameter :: Ntdyn=2d0				! Number of dynamical timescales to iterate over
-	character(len=99),parameter :: nam="17-08-18-N100Test"	! Start of File Name
+	character(len=99),parameter :: nam="Plot"	! Start of File Name
 	character(len=99),parameter :: dat=trim(nam)//"_Data.dat"	! Name of file to save data to
 	character(len=99),parameter :: mass=trim(nam)//"_Signs.dat"	! File to save mass signs to
 	real*8,parameter :: alpha=1d-3			! Dimensionless parameter for adjusted time step
@@ -331,8 +331,8 @@ subroutine Accelerations(y,acc,r,v,z)
 
 	soft = 0.98*dble(N)**(-0.28)
 
-	gravcoeff = 1d0/a(z)/a(z)
-	dragcoeff = -2d0*H(z)!1d0*H(z)!
+	gravcoeff = a(z)*a(z)
+	dragcoeff = -2d0*H(z)
 	
 	! Calculate the resulting gravitational accelerations of each body [Msolar*Mpc/yr^2]
 	! Calculated via force on body j due to each other body i!=j 
@@ -345,15 +345,11 @@ subroutine Accelerations(y,acc,r,v,z)
 			do k=1,27
 				rirj = (r(:,i)+offset(:,k))-r(:,j)
 				magrirj2 = mag_rirj(r,i,j,k)*mag_rirj(r,i,j,k)
-!				if(magrirj2 .le. soft) then
 				dist3 = (magrirj2+soft*soft)**(1.5)	! (Mag(ri-rj)^2 + Epsilon^2)^(3/2)
-!				else
-!					dist3 = magrirj2**1.5
-!				endif
 				grav = grav+MA(i)*rirj/dist3
 			enddo
 		enddo
-		grav = gravcoeff*GMj*grav
+		grav = GMj*grav/gravcoeff
 		drag = dragcoeff*v(:,j)
 		acc(1+vari(j):3+vari(j)) = acc(1+vari(j):3+vari(j))+grav+drag
 	enddo
@@ -379,10 +375,10 @@ subroutine Orbit(y0,y,f)
 	real*8 :: t=0d0								! Time at current iteration [yr]
 	real*8 :: dtmax,dtmin						! Timestep upper/lower bounds
 	real*8 :: z=1.1d3								! Redshift
-	real*8,dimension(N) :: delta				! Ratio between rho and rhobar
+	real*8 :: delta								! For measuring growth rate
 	real*8,dimension(N,N) :: magr				! Store distances to each other body
 	
-	y=y0/a(z)										! Initialise position vector y
+	y=y0												! Initialise position vector y
 	! Make sure every particle is IN the box
 	call boundary(y)
 	call RHS(y,f,r,v,z)							! Initialise f
@@ -403,10 +399,10 @@ subroutine Orbit(y0,y,f)
 		if (t+dt .gt. ttot .AND. t .ne. ttot) dt=ttot-t
 		if (t .ge. i*ttot/Np) then				! Write per specified time interval
 			call LocalDensity(r,rho,magr)		! Calculate local densities
-			delta=rho/rhobar
+			delta=(maxval(rho)-minval(rho))/rhobar
 			print '(F7.3,"%",A,F5.3,A)', t/ttot*1d2,' - t = ',t/tdyn,' tdyn'	! Display % complete
 			write(1,*) y(1:N3),t,dt,delta		! Write data to file
-!			if (mod(i,Np/5) .eq. 0 .AND. i .ne. 0) call SYSTEM("python Spacetime.py")
+			if (mod(i,Np/5) .eq. 0 .AND. i .ne. 0) call SYSTEM("python Rhoplot.py")
 			i=i+1
 		endif
 		call RK4(y,t,dt,r,v,z)					! Integrate y using the RK4 technique
