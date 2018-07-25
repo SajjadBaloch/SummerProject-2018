@@ -7,7 +7,7 @@ save=False
 # Plot the mirror copies of the data?
 Multi=True
 # Filenames
-File  = 'Plot'
+File  = '24-07-18_N50Test'
 Dat   = File+'_Data'				# The Plot Data
 Signs = File+'_Signs'			# Signs of the Masses
 Image = File+'_SpacetimePlot'	# Name of the Image to Save
@@ -86,12 +86,12 @@ for j,line in zip(xrange(dp),lines):
 			ym[i][j]=y[i][j]-2*L
 			zp[i][j]=z[i][j]+2*L
 			zm[i][j]=z[i][j]-2*L
-		t[j]=float(data[-(N+2)])/tdyn
+		t[j]=float(data[-3])/tdyn
 print '======Data Read======='
 print 'ttot =',t[-1],'tdyn'
 print '===Generating Plots==='
 
-tlim = max(t)+0.1	
+tlim = max(t)+0.05	
 # Customisation
 plt.rc('path',simplify=True)
 plt.rc('savefig',dpi=300,format='png')
@@ -225,7 +225,7 @@ ax9.set_ylabel(r'z(t=tfin) [Mpc]',size=txt)
 
 ax1.set_xlim(-lim,lim)
 ax1.set_ylim(-lim,lim)
-ax4.set_xlim(-0.1,tlim)
+ax4.set_xlim(0.,tlim)
 ax4.set_ylim(-lim,lim)
 
 # Set plot titles	

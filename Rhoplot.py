@@ -88,10 +88,10 @@ ax.set_xscale('log')
 
 # Set axes labels
 plt.xlabel('t/tdyn',size=txt)
-plt.ylabel(r'$\delta=\frac{\rho_{Max}-\rho_{Min}}{\bar{\rho}}$',size=1.3*txt)
+plt.ylabel(r'$\delta$',size=1.3*txt)
 
 # Set plot titles	
-ax.set_title('Local Densities - '+File,size=1.5*txt)
+ax.set_title('Growth Rate - '+File,size=1.5*txt)
 
 # Set Plot Legend
 pos_mass = plt.scatter([],[],s=3*s,color='b',marker='.',linewidths=s,label='+ve Mass')

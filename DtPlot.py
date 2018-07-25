@@ -42,8 +42,8 @@ dt=[0 for i in xrange(dp)]
 print '=====Reading Data====='
 for i,line in zip(xrange(dp),lines):
 	data = line.split()
-	t[i]=float(data[-(N+2)])/tdyn
-	dt[i]=float(data[-(N+1)])
+	t[i]=float(data[-3])/tdyn
+	dt[i]=float(data[-2])
 print '======Data Read======='
 print '===Generating Plots==='
 

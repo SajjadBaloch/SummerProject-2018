@@ -4,11 +4,11 @@ module Constants
 ! Module to keep constants in
 !--------------------------------------------------------------------------------------------------
 	implicit none
-	integer,parameter :: N=10					! Number of bodies
+	integer,parameter :: N=50					! Number of bodies
 	integer,parameter :: k=5					! Locate the kth nearest particle
 	integer,parameter :: Np=1d4				! Number of data points to write
 	real*8,parameter :: Ntdyn=2d0				! Number of dynamical timescales to iterate over
-	character(len=99),parameter :: nam="Plot"	! Start of File Name
+	character(len=99),parameter :: nam="24-07-18_N50Test"	! Start of File Name
 	character(len=99),parameter :: dat=trim(nam)//"_Data.dat"	! Name of file to save data to
 	character(len=99),parameter :: mass=trim(nam)//"_Signs.dat"	! File to save mass signs to
 	real*8,parameter :: alpha=1d-3			! Dimensionless parameter for adjusted time step
@@ -141,37 +141,39 @@ subroutine init_cond(y0)
 	real*8,external  :: RNG							! Use RNG to set initial conditions
 	real*8  :: rmin,rmax								! Lower/Upper bounds for RNG
 	integer :: i										! Iteration integer
+	integer :: ind										! Dummy variable
 	
 	! Set the min and max desired values
 	rmin=-L/2d0; rmax=L/2d0
 	! Pseudo-randomly set initial values for the solution vector y(t=0)
 	do i=1,N
+		ind = vari(i)
 		! Select desired distribution
 		goto 20
 		! Seperate +ve and -ve Mass particles
 10		if (M(i) .gt. 0d0) then 
-			y0(1+vari(i)) = RNG(0d0,rmax)		! x-positions
-			y0(2+vari(i)) = RNG(0d0,rmax)		! y-positions
-			y0(3+vari(i)) = RNG(0d0,rmax)		! z-positions
+			y0(1+ind) = RNG(0d0,rmax)		! x-positions
+			y0(2+ind) = RNG(0d0,rmax)		! y-positions
+			y0(3+ind) = RNG(0d0,rmax)		! z-positions
 			! Options for desired seperation			
-!			y0(1+vari(i)) = RNG(rmin,rmax)
-!			y0(2+vari(i)) = RNG(rmin,rmax)
-!			y0(3+vari(i)) = RNG(rmin,rmax)
+!			y0(1+ind) = RNG(rmin,rmax)
+!			y0(2+ind) = RNG(rmin,rmax)
+!			y0(3+ind) = RNG(rmin,rmax)
 		else
-			y0(1+vari(i)) = RNG(rmin,0d0)
-			y0(2+vari(i)) = RNG(rmin,0d0)
-			y0(3+vari(i)) = RNG(rmin,0d0)
+			y0(1+ind) = RNG(rmin,0d0)
+			y0(2+ind) = RNG(rmin,0d0)
+			y0(3+ind) = RNG(rmin,0d0)
 			! Options for desired seperation			
-!			y0(1+vari(i)) = RNG(rmin,rmax)
-!			y0(2+vari(i)) = RNG(rmin,rmax)
-!			y0(3+vari(i)) = RNG(rmin,rmax)
+!			y0(1+ind) = RNG(rmin,rmax)
+!			y0(2+ind) = RNG(rmin,rmax)
+!			y0(3+ind) = RNG(rmin,rmax)
 		endif
 		cycle
 		
 		! Mix +ve and -ve mass particles together
-20		y0(1+vari(i)) = RNG(rmin,rmax)
-		y0(2+vari(i)) = RNG(rmin,rmax)
-		y0(3+vari(i)) = RNG(rmin,rmax)
+20		y0(1+ind) = RNG(rmin,rmax)
+		y0(2+ind) = RNG(rmin,rmax)
+		y0(3+ind) = RNG(rmin,rmax)
 		cycle
 		
 		! Fix positions of particles
@@ -243,34 +245,31 @@ subroutine Boundary(y)
 	integer :: i
 	integer,external :: vari
 	real*8 :: BC=L/2d0						! Boundary Condition (edge of box)
-	integer :: xind,yind,zind				! Dummy variables
+	integer :: ind								! Dummy variable
 	
 	do i=1,N
-		! Position indeces to reference
-		xind = 1+vari(i)
-		yind = 2+vari(i)
-		zind = 3+vari(i)
+		ind = vari(i)
 		! Check solution vector y against the boundary conditions for each particle
 		! Check x-coordinate
-		do while (y(xind) .gt. BC)
-			y(xind)=y(xind)-L
+		do while (y(1+ind) .gt. BC)
+			y(1+ind)=y(1+ind)-L
 		enddo
-		do while (y(xind) .lt.-BC)
-			y(xind)=y(xind)+L
+		do while (y(1+ind) .lt.-BC)
+			y(1+ind)=y(1+ind)+L
 		enddo
 		! Check y-coordinate
-		do while (y(yind) .gt. BC)
-			y(yind)=y(yind)-L
+		do while (y(2+ind) .gt. BC)
+			y(2+ind)=y(2+ind)-L
 		enddo
-		do while (y(yind) .lt. -BC)
-			y(yind)=y(yind)+L
+		do while (y(2+ind) .lt. -BC)
+			y(2+ind)=y(2+ind)+L
 		enddo
 		! Check z-coordinate
-		do while (y(zind) .gt. BC)
-			y(zind)=y(zind)-L
+		do while (y(3+ind) .gt. BC)
+			y(3+ind)=y(3+ind)-L
 		enddo
-		do while (y(zind) .lt. -BC)
-			y(zind)=y(zind)+L
+		do while (y(3+ind) .lt. -BC)
+			y(3+ind)=y(3+ind)+L
 		enddo
 	enddo
 
@@ -320,7 +319,7 @@ subroutine Accelerations(y,acc,r,v,z)
 	real*8,dimension(3) :: rirj					! Vector pointing from rj to ri (ri-rj)
 	real*8,dimension(3) :: grav					! Gravitational acceleration term
 	real*8,dimension(3) :: drag					! Hubble Drag term
-	real*8 :: gravcoeff,dragcoeff				! Coefficients
+	real*8 :: gravcoeff,dragcoeff					! Coefficients
 
 	
 	! Store the positions and velocities of each body for easy reference
@@ -330,8 +329,7 @@ subroutine Accelerations(y,acc,r,v,z)
 	enddo
 
 	soft = 0.98*dble(N)**(-0.28)
-
-	gravcoeff = a(z)*a(z)
+	gravcoeff = a(z)!*a(z)
 	dragcoeff = -2d0*H(z)
 	
 	! Calculate the resulting gravitational accelerations of each body [Msolar*Mpc/yr^2]
@@ -345,7 +343,7 @@ subroutine Accelerations(y,acc,r,v,z)
 			do k=1,27
 				rirj = (r(:,i)+offset(:,k))-r(:,j)
 				magrirj2 = mag_rirj(r,i,j,k)*mag_rirj(r,i,j,k)
-				dist3 = (magrirj2+soft*soft)**(1.5)	! (Mag(ri-rj)^2 + Epsilon^2)^(3/2)
+				dist3 = (magrirj2+soft*soft)**(1.5)
 				grav = grav+MA(i)*rirj/dist3
 			enddo
 		enddo
@@ -402,7 +400,7 @@ subroutine Orbit(y0,y,f)
 			delta=(maxval(rho)-minval(rho))/rhobar
 			print '(F7.3,"%",A,F5.3,A)', t/ttot*1d2,' - t = ',t/tdyn,' tdyn'	! Display % complete
 			write(1,*) y(1:N3),t,dt,delta		! Write data to file
-			if (mod(i,Np/5) .eq. 0 .AND. i .ne. 0) call SYSTEM("python Rhoplot.py")
+!			if (mod(i,Np/5) .eq. 0 .AND. i .ne. 0) call SYSTEM("python Rhoplot.py")
 			i=i+1
 		endif
 		call RK4(y,t,dt,r,v,z)					! Integrate y using the RK4 technique

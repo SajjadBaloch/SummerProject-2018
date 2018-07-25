@@ -1,12 +1,7 @@
 import matplotlib.pylab as plt
 import matplotlib.ticker as mtick
-import numpy as np
 import sys
-from matplotlib.pyplot import cm
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib import animation
 from matplotlib import rc
-from decimal import Decimal
 
 # Save the plot?
 save=False
