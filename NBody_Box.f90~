@@ -4,11 +4,11 @@ module Constants
 ! Module to keep constants in
 !--------------------------------------------------------------------------------------------------
 	implicit none
-	integer,parameter :: N=50					! Number of bodies
-	integer,parameter :: k=5					! Locate the kth nearest particle
+	integer,parameter :: N=6					! Number of bodies
+	integer,parameter :: k=2					! Locate the kth nearest particle
 	integer,parameter :: Np=1d4				! Number of data points to write
 	real*8,parameter :: Ntdyn=2d0				! Number of dynamical timescales to iterate over
-	character(len=99),parameter :: nam="Plot"	! Start of File Name
+	character(len=99),parameter :: nam="26-07-18-N50PN"	! Start of File Name
 	character(len=99),parameter :: dat=trim(nam)//"_Data.dat"	! Name of file to save data to
 	character(len=99),parameter :: mass=trim(nam)//"_Signs.dat"	! File to save mass signs to
 	real*8,parameter :: alpha=1d-3			! Dimensionless parameter for adjusted time step
@@ -106,7 +106,7 @@ subroutine Set_Masses
 	
 	! Assign a value to each mass [Msolar]
 	M = vol*1d13
-	goto 20
+	goto 10
 	! Set half the masses negative
 10	M(1+N/2:) = -M(1+N/2:)
 	! Assign Masses according to desired signs
@@ -117,7 +117,6 @@ subroutine Set_Masses
 	MI = dsign(M,MP)	! Inertial Mass
 	! Store the sign of each mass for python to reference
 	s=dsign(1d0,M)
-
 
 	! Total mass of the system [Msolar]
 	Mtot = sum(abs(M))
@@ -364,8 +363,7 @@ subroutine Orbit(y0,y,f)
 	real*8,intent(inout),dimension(Ndim) :: y0,y,f
 	real*8,external :: dz,a
 	real*8,dimension(3,N) :: r,v				! Position and velocity vectors
-	real*8 :: rhobar								! Average density [Msolar/Mpc^3]
-	real*8,dimension(N) :: rho					! Local density [Msolar/Mpc^3]
+	real*8 :: rhobox								! Density of simulation box [Msolar/Mpc^3]
 	real*8 :: tdyn									! The dynamical timescale [yr]
 	real*8 :: ttot									! Total time to integrate over [yr]
 	real*8 :: dt									! Time step [yr]
@@ -373,17 +371,19 @@ subroutine Orbit(y0,y,f)
 	real*8 :: t=0d0								! Time at current iteration [yr]
 	real*8 :: dtmax,dtmin						! Timestep upper/lower bounds
 	real*8 :: z=1.1d3								! Redshift
-	real*8 :: delta								! For measuring growth rate
+	real*8 :: deltap,deltan						! Fractional density perturbation (+ve/-ve masses)
 	real*8,dimension(N,N) :: magr				! Store distances to each other body
 	
-	y=y0												! Initialise position vector y
+	! Initialise position vector y
+	y=y0
 	! Make sure every particle is IN the box
 	call boundary(y)
-	call RHS(y,f,r,v,z)							! Initialise f
+	! Initialise f
+	call RHS(y,f,r,v,z)
 	
 	! Set the total length of time to integrate over
-	rhobar = Mtot/L/L/L				![Msolar/Mpc^3]
-	tdyn   = 1d0/sqrt(rhobar*G)	![yrs]
+	rhobox = Mtot/L/L/L				![Msolar/Mpc^3]
+	tdyn   = 1d0/sqrt(rhobox*G)	![yrs]
 	ttot   = Ntdyn*tdyn				![yrs]
 	dtmax  = tdyn/1d5					![yrs]
 	dtmin  = 1d3						![yrs]
@@ -391,20 +391,26 @@ subroutine Orbit(y0,y,f)
 	open(1,file=trim(dat))
 	write(1,*) N,L,tdyn
 	do while (t .le. ttot)
-		call Timestep(r,v,dt,dtmin,magr)		! Adjust the time step
+		! Adjust the time step
+		call Timestep(r,v,dt,dtmin,magr)
 		if (dt .gt. dtmax) dt=dtmax
 		if (dt .lt. dtmin) dt=dtmin
 		if (t+dt .gt. ttot .AND. t .ne. ttot) dt=ttot-t
-		if (t .ge. i*ttot/Np) then				! Write per specified time interval
-			call LocalDensity(r,rho,magr)		! Calculate local densities
-			delta=(maxval(rho)-minval(rho))/rhobar
-			print '(F7.3,"%",A,F5.3,A)', t/ttot*1d2,' - t = ',t/tdyn,' tdyn'	! Display % complete
-			write(1,*) y(1:N3),t,dt,delta		! Write data to file
+		! Write per specified time interval
+		if (t .ge. i*ttot/Np) then
+			! Calculate local densities
+			call LocalDensity(r,magr,deltap,deltan)
+			! Display % complete
+			print '(F7.3,"%",A,F5.3,A)', t/ttot*1d2,' - t = ',t/tdyn,' tdyn'
+			! Write data to file
+			write(1,*) y(1:N3),t,dt,deltap,deltan
 !			if (mod(i,Np/5) .eq. 0 .AND. i .ne. 0) call SYSTEM("python Rhoplot.py")
 			i=i+1
 		endif
-		call RK4(y,t,dt,r,v,z)					! Integrate y using the RK4 technique
-		call Boundary(y)							! Check against boundary conditions
+		! Integrate y using the RK4 technique
+		call RK4(y,t,dt,r,v,z)
+		! Check against boundary conditions
+		call Boundary(y)
 		t=t+dt
 		z=z+dz(z,dt)
 	enddo
@@ -415,7 +421,7 @@ subroutine Orbit(y0,y,f)
 					 trim(dat),&
 					 trim(mass)
 	print*
-	print '(A,ES16.10,A)', 'rhobar = ',rhobar,' Msolar/Mpc^3',&
+	print '(A,ES16.10,A)', 'rhobox = ',rhobox,' Msolar/Mpc^3',&
 								  'G      = ',G,		' Mpc^3/yr^2/Msolar',&
 								  'tdyn   = ',tdyn,	' yr',&
 								  'ttot   = ',ttot,	' yr'
@@ -456,22 +462,30 @@ subroutine Timestep(r,v,dt,dtmin,magr)
 end subroutine Timestep
 
 !--------------------------------------------------------------------------------------------------
-subroutine LocalDensity(r,rho,magr)
+subroutine LocalDensity(r,magr,deltap,deltan)
 !--------------------------------------------------------------------------------------------------
 ! Subroutine that returns the "local density" of each body
 ! This is represented by a sphere containing the k nearest bodies to each body
 !--------------------------------------------------------------------------------------------------
 	use Constants, only: N,k,M,pi
 	implicit none
-	real*8,dimension(3,N),intent(in) :: r	! Position vectors of each body
-	real*8,dimension(N),intent(out) :: rho	! Local density for each particle
-	real*8,dimension(N,N),intent(in) :: magr	! Dummy variable
-	real*8 :: Mloc							! Local Total Mass
-	real*8 :: rsphere						! Radius of sphere containing the nth nearest body
-	real*8 :: V								! Local Volume
-	real*8,allocatable :: search(:),mass(:)	! Dummy arrays for minimum search
-	real*8 :: ind							! Dummy variable to store an index
-	integer :: i,j							! Iteration integers
+	real*8,dimension(3,N),intent(in) :: r			! Position vectors of each body
+	real*8,dimension(N,N),intent(in) :: magr		! Dummy variable
+	real*8,intent(out) :: deltap,deltan				! Fractional density perturbations
+	real*8,allocatable :: rholocp(:),rholocn(:)	! Local density for each particle (+ve/-ve masses)
+	integer :: p											! Number of +ve particles
+	real*8 :: rhobar										! Mean Density
+	real*8 :: drhop,drhon								! Density Perturbations (+ve/-ve masses)
+	real*8 :: Mloc											! Local Total Mass
+	real*8 :: rsphere										! Radius of sphere containing the nth nearest body
+	real*8 :: V												! Local Volume
+	real*8,allocatable :: search(:),mass(:)		! Dummy arrays for minimum search
+	integer :: ind											! Dummy variable to store an index
+	real*8 :: dummy										! Dummy variable
+	integer :: i,j											! Iteration integers
+
+	p = count(M .gt. 0d0)
+	allocate(rholocp(p),rholocn(N-p))
 
 	! Search for kth nearest body
 	do i=1,N
@@ -479,22 +493,56 @@ subroutine LocalDensity(r,rho,magr)
 		search=(/magr(1:i-1,i),magr(i+1:,i)/)
 		mass=(/M(1:i-1),M(i+1:)/)
 		Mloc=abs(M(i))
+		dummy=dsign(1d0,M(i))	! To search for same sign masses
 		do j=1,k
 			! Index of current minimum
 			ind=MINLOC(search,1)
+			! Only search for masses of the same sign
+			do while (dsign(1d0,mass(ind)) .ne. dummy)
+				if (size(search) .eq. 0) stop
+				! Remove this minimum from search to find next minimum
+				search=(/search(1:ind-1),search(ind+1:)/)
+				mass=(/mass(1:ind-1),mass(ind+1:)/)
+				ind=MINLOC(search,1)
+			enddo
 			! Add this body's mass to the local total
-			Mloc=Mloc+abs(mass(nint(ind)))
-			if (j .eq. k) exit	! Don't remove the kth element from search list
+			Mloc=Mloc+abs(mass(ind))
+			! Don't remove the kth element from search list
+			if (j .eq. k) exit
 			! Remove this minimum from search to find next minimum
-			search=(/search(1:nint(ind)-1),search(nint(ind)+1:)/)
-			mass=(/mass(1:nint(ind)-1),mass(nint(ind)+1:)/)
+			search=(/search(1:ind-1),search(ind+1:)/)
+			mass=(/mass(1:ind-1),mass(ind+1:)/)
 		enddo
 		! Calculate the local density for body i
 		rsphere=MINVAL(search)
 		V=4d0/3d0*pi*rsphere*rsphere*rsphere	! Volume of a sphere
-		rho(i)=Mloc/V
+		if (M(i) .gt. 0d0) then
+			rholocp(i)=Mloc/V
+		else
+			rholocn(i-p)=Mloc/V
+		endif
 	enddo
-		
+	! Mean local density
+	rhobar=(sum(rholocp)+sum(rholocn))/N
+
+	! Calculate the Fractional density perturbation delta
+	! The density perturbation is the st.dev of the local densities from the mean
+	drhop=0d0;drhon=0d0
+	do i=1,N
+		if (M(i) .gt. 0d0) then
+			dummy = rholocp(i)-rhobar
+			drhop = drhop + dummy*dummy
+		else
+			dummy = rholocn(i-p)-rhobar
+			drhon = drhon + dummy*dummy
+		endif
+	enddo
+	drhop=(drhop/p)**(0.5)
+	drhon=(drhon/(N-p))**(0.5)
+	
+	deltap=drhop/rhobar
+	deltan=drhon/rhobar
+	
 end subroutine LocalDensity
 
 !--------------------------------------------------------------------------------------------------

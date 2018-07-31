@@ -6,9 +6,8 @@ from matplotlib import rc
 # Save the plot?
 save=False
 # Files To Open
-File  = 'Plot'
+File  = 'Test2'
 Dat   = File+'_Data'
-Signs = File+'_Signs'			# Signs of the Masses
 Image = Dat +'_DensityPlot'	# Name of the Image to Save
 
 # Customisation variables
@@ -36,29 +35,18 @@ tdyn=float(paras[2])
 #Number of data points
 dp = len(lines)
 
-# Define the colors to use in the plot, using the signs of the masses
-f = open(Signs+'.dat','r')
-read = f.readline()
-f.close
-signs = [float(read.split()[i]) for i in xrange(N)]
-colors=[0 for i in xrange(N)]
-for i in xrange(N):
-	if (signs[i]>0):
-		colors[i] = 'b'
-	else:
-		colors[i] = 'r'
-
 # Read data and make plots
 t=[0 for i in xrange(dp)]
-delta=[0 for i in xrange(dp)]# for j in xrange(N)]
+deltap=[0 for i in xrange(dp)]
+deltan=[0 for i in xrange(dp)]
 
 print '=====Reading Data====='
 for i,line in zip(xrange(dp),lines):
 	data = line.split()
-	t[i]=float(data[-3])/tdyn
-	delta[i]=float(data[-1])
-#	for j in xrange(N):
-#		delta[j][i]=float(data[-(N-j)])
+	t[i]=float(data[-4])/tdyn
+	deltap[i]=float(data[-2])
+	deltan[i]=float(data[-1])
+	
 print '======Data Read======='
 print '===Generating Plots==='
 
@@ -81,10 +69,13 @@ plt.rc('ytick.major',size=tickh,width=lw,pad=pad)
 plt.figure(figsize=(24,12))
 
 ax=plt.axes(xlim=(tmin,tmax))#,ylim=(dmin,dmax))
-ax.plot(t,delta,ls='solid',lw=1,color='b')
+ax.plot(t,deltap,ls='solid',lw=1,color='b')
+ax.plot(t,deltan,ls='solid',lw=1,color='r')
 
 ax.hlines(0.,tmin,tmax,linestyles='dashed',lw=1.2)
-ax.set_xscale('log')
+
+#ax.set_xscale('log')
+#ax.set_yscale('log')
 
 # Set axes labels
 plt.xlabel('t/tdyn',size=txt)

@@ -7,7 +7,7 @@ save=False
 # Plot the mirror copies of the data?
 Multi=True
 # Filenames
-File  = '24-07-18_N50Test'
+File  = 'Test1'
 Dat   = File+'_Data'				# The Plot Data
 Signs = File+'_Signs'			# Signs of the Masses
 Image = File+'_SpacetimePlot'	# Name of the Image to Save
@@ -86,7 +86,7 @@ for j,line in zip(xrange(dp),lines):
 			ym[i][j]=y[i][j]-2*L
 			zp[i][j]=z[i][j]+2*L
 			zm[i][j]=z[i][j]-2*L
-		t[j]=float(data[-3])/tdyn
+		t[j]=float(data[-4])/tdyn
 print '======Data Read======='
 print 'ttot =',t[-1],'tdyn'
 print '===Generating Plots==='

@@ -2,12 +2,12 @@ import matplotlib.pylab as plt
 import sys
 from matplotlib import animation
 
-interval=0	# Interval between frames in ms
+interval=20	# Interval between frames in ms
 sel=1			# To skip data points (to speed up animation)
 rep=False		# Animation repeats?
-Multi=False	# Multiple copies of the central box?
+Multi=True	# Multiple copies of the central box?
 # Files to open
-File  = '24-07-18_N50Test'
+File  = 'Test1'
 Dat   = File+'_Data.dat'				# The Plot Data
 Signs = File+'_Signs.dat'			# Signs of the Masses
 
