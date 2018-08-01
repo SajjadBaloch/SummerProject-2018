@@ -5,13 +5,16 @@ from matplotlib import rc
 # Save the plot?
 save=False
 # Plot the mirror copies of the data?
-Multi=True
+Multi=False
 # Filenames
-File  = 'Test2'
+File  = 'Plot'
 Dat   = File+'_Data'				# The Plot Data
 Signs = File+'_Signs'			# Signs of the Masses
-Image = File+'_SpacetimePlot'	# Name of the Image to Save
-
+if (Multi):
+	Image = File+'_SpacetimeMultiPlot'	# Name of the Image to Save
+else:
+	Image = File+'_SpacetimePlot'			# Name of the Image to Save
+	
 # Customisation variables
 s=0.5			# Marker size for spacial plots
 ms=0.06		# Marker size for spacetime plots
@@ -247,6 +250,7 @@ print '====Plots Generated==='
 if (save):
 	plt.savefig('/home/echo/cbm7/Summer_Project/Graphs/'+Image)
 	print '======Image Saved====='
+	print 'Image file: '+Image
 else:
 	# Show the Figure
 	plt.show()

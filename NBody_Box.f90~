@@ -4,11 +4,13 @@ module Constants
 ! Module to keep constants in
 !--------------------------------------------------------------------------------------------------
 	implicit none
-	integer,parameter :: N=6					! Number of bodies
-	integer,parameter :: k=2					! Locate the kth nearest particle
+	integer,parameter :: N=5**3				! Number of bodies
+!	##### Note to self, use values with an exact cube root when arranging in grid #####	
+	integer,parameter :: k=4					! Locate the kth nearest particle
 	integer,parameter :: Np=1d4				! Number of data points to write
+!	##### note to self, 1d4 not enough dp for N=50, anim stuttery #####
 	real*8,parameter :: Ntdyn=2d0				! Number of dynamical timescales to iterate over
-	character(len=99),parameter :: nam="26-07-18-N50PN"	! Start of File Name
+	character(len=99),parameter :: nam="Plot"	! Start of File Name
 	character(len=99),parameter :: dat=trim(nam)//"_Data.dat"	! Name of file to save data to
 	character(len=99),parameter :: mass=trim(nam)//"_Signs.dat"	! File to save mass signs to
 	real*8,parameter :: alpha=1d-3			! Dimensionless parameter for adjusted time step
@@ -83,7 +85,6 @@ program NBody
 							 O,L,L,  O,L,-L,  O,-L,L,  O,-L,-L,&
 							 L,L,L,  L,-L,L,  L,L,-L,  L,-L,-L,&
 							-L,L,L, -L,-L,L, -L,L,-L, -L,-L,-L/), (/3,27/))
-	
 	call Set_Masses						! Setup the array of masses		
 	call init_cond(y0)					! Setup initial values for y
 	call Orbit(y0,y,f)					! Determine the orbital paths of each body
@@ -106,7 +107,7 @@ subroutine Set_Masses
 	
 	! Assign a value to each mass [Msolar]
 	M = vol*1d13
-	goto 10
+	goto 20
 	! Set half the masses negative
 10	M(1+N/2:) = -M(1+N/2:)
 	! Assign Masses according to desired signs
@@ -140,7 +141,7 @@ subroutine init_cond(y0)
 	real*8,external  :: RNG							! Use RNG to set initial conditions
 	real*8  :: rmin,rmax								! Lower/Upper bounds for RNG
 	integer :: i										! Iteration integer
-	integer :: ind										! Dummy variable
+	integer :: ind,Ncub,gap										! Dummy variables
 	
 	! Set the min and max desired values
 	rmin=-L/2d0; rmax=L/2d0
@@ -148,7 +149,7 @@ subroutine init_cond(y0)
 	do i=1,N
 		ind = vari(i)
 		! Select desired distribution
-		goto 20
+		goto 30
 		! Seperate +ve and -ve Mass particles
 10		if (M(i) .gt. 0d0) then 
 			y0(1+ind) = RNG(0d0,rmax)		! x-positions
@@ -176,7 +177,17 @@ subroutine init_cond(y0)
 		cycle
 		
 		! Fix positions of particles
-30		cycle
+30		Ncub=N**(1d0/3d0)											! Cube-root of N
+		if (Ncub .le. 3) then
+			gap=L/dble(Ncub)
+		else
+			gap=L/dble(Ncub+1)
+		endif
+		y0(1+vari(i))=rmin+gap/2d0+(i-1)*gap		! x-positions
+		y0(2+vari(i):3+vari(i))=rmax+rmin/dble(2*Ncub)+i*rmin/dble(Ncub)
+!		y0(2+i*Ncub:(i+1)*Ncub) = rmin+i*L/dble(Ncub)	!y-positions
+!		y0(3+i*Ncub:(i+1)*Ncub) = rmin+i*L/dble(Ncub)	!z-positions
+		cycle
 	
 	enddo
 	! Assign initial velocities
@@ -380,7 +391,7 @@ subroutine Orbit(y0,y,f)
 	call boundary(y)
 	! Initialise f
 	call RHS(y,f,r,v,z)
-	
+
 	! Set the total length of time to integrate over
 	rhobox = Mtot/L/L/L				![Msolar/Mpc^3]
 	tdyn   = 1d0/sqrt(rhobox*G)	![yrs]
@@ -399,12 +410,14 @@ subroutine Orbit(y0,y,f)
 		! Write per specified time interval
 		if (t .ge. i*ttot/Np) then
 			! Calculate local densities
-			call LocalDensity(r,magr,deltap,deltan)
+!			call LocalDensity(r,magr,deltap,deltan)
 			! Display % complete
 			print '(F7.3,"%",A,F5.3,A)', t/ttot*1d2,' - t = ',t/tdyn,' tdyn'
 			! Write data to file
 			write(1,*) y(1:N3),t,dt,deltap,deltan
 !			if (mod(i,Np/5) .eq. 0 .AND. i .ne. 0) call SYSTEM("python Rhoplot.py")
+			call SYSTEM("python test.py")
+			stop
 			i=i+1
 		endif
 		! Integrate y using the RK4 technique

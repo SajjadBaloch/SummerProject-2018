@@ -6,7 +6,7 @@ from matplotlib import rc
 # Save the plot?
 save=False
 # Files To Open
-File  = 'Test2'
+File  = '26-07-18-N50PN'
 Dat   = File+'_Data'
 Image = Dat +'_DensityPlot'	# Name of the Image to Save
 
