@@ -4,13 +4,13 @@ module Constants
 ! Module to keep constants in
 !--------------------------------------------------------------------------------------------------
 	implicit none
-	integer,parameter :: N=5**3				! Number of bodies
+	integer,parameter :: N=4**3				! Number of bodies
 !	##### Note to self, use values with an exact cube root when arranging in grid #####	
-	integer,parameter :: k=4					! Locate the kth nearest particle
+	integer,parameter :: k=5					! Locate the kth nearest particle
 	integer,parameter :: Np=1d4				! Number of data points to write
 !	##### note to self, 1d4 not enough dp for N=50, anim stuttery #####
 	real*8,parameter :: Ntdyn=2d0				! Number of dynamical timescales to iterate over
-	character(len=99),parameter :: nam="Plot"	! Start of File Name
+	character(len=99),parameter :: nam="GridTest_4CubPN"	! Start of File Name
 	character(len=99),parameter :: dat=trim(nam)//"_Data.dat"	! Name of file to save data to
 	character(len=99),parameter :: mass=trim(nam)//"_Signs.dat"	! File to save mass signs to
 	real*8,parameter :: alpha=1d-3			! Dimensionless parameter for adjusted time step
@@ -107,12 +107,11 @@ subroutine Set_Masses
 	
 	! Assign a value to each mass [Msolar]
 	M = vol*1d13
-	goto 20
 	! Set half the masses negative
-10	M(1+N/2:) = -M(1+N/2:)
+	M(1+N/2:) = -M(1+N/2:)
 	! Assign Masses according to desired signs
 	! To not violate equivalency principle, MP and MI must have same sign
-20	MP = M				! Passive Gravitational Mass
+	MP = M				! Passive Gravitational Mass
 	MA = M				! Active Gravitational Mass
 	! Use dsign to automatically ensure equivalency principle is obeyed
 	MI = dsign(M,MP)	! Inertial Mass
@@ -141,16 +140,18 @@ subroutine init_cond(y0)
 	real*8,external  :: RNG							! Use RNG to set initial conditions
 	real*8  :: rmin,rmax								! Lower/Upper bounds for RNG
 	integer :: i										! Iteration integer
-	integer :: ind,Ncub,gap										! Dummy variables
+	integer :: ind,fix,Ncub,gap					! Dummy variables
 	
-	! Set the min and max desired values
+	! Set the min and max positions for particles
 	rmin=-L/2d0; rmax=L/2d0
+	
 	! Pseudo-randomly set initial values for the solution vector y(t=0)
 	do i=1,N
-		ind = vari(i)
+		ind = vari(i)							! Iterating array index
+		fix = 0									! For fixing particle positions
 		! Select desired distribution
 		goto 30
-		! Seperate +ve and -ve Mass particles
+		! Seperate +ve and -ve Mass particles within a random distribution
 10		if (M(i) .gt. 0d0) then 
 			y0(1+ind) = RNG(0d0,rmax)		! x-positions
 			y0(2+ind) = RNG(0d0,rmax)		! y-positions
@@ -169,27 +170,31 @@ subroutine init_cond(y0)
 !			y0(3+ind) = RNG(rmin,rmax)
 		endif
 		cycle
-		
-		! Mix +ve and -ve mass particles together
-20		y0(1+ind) = RNG(rmin,rmax)
-		y0(2+ind) = RNG(rmin,rmax)
-		y0(3+ind) = RNG(rmin,rmax)
+		! Mix +ve and -ve mass particles together randomly
+20		y0(1+ind) = RNG(rmin,rmax)			! x-positions
+		y0(2+ind) = RNG(rmin,rmax)			! y-positions
+		y0(3+ind) = RNG(rmin,rmax)			! z-positions
 		cycle
-		
-		! Fix positions of particles
-30		Ncub=N**(1d0/3d0)											! Cube-root of N
-		if (Ncub .le. 3) then
-			gap=L/dble(Ncub)
-		else
-			gap=L/dble(Ncub+1)
-		endif
-		y0(1+vari(i))=rmin+gap/2d0+(i-1)*gap		! x-positions
-		y0(2+vari(i):3+vari(i))=rmax+rmin/dble(2*Ncub)+i*rmin/dble(Ncub) !FIX THIS
-!		y0(2+i*Ncub:(i+1)*Ncub) = rmin+i*L/dble(Ncub)	!y-positions
-!		y0(3+i*Ncub:(i+1)*Ncub) = rmin+i*L/dble(Ncub)	!z-positions
+		! Fix positions of particles to a grid
+30		Ncub=N**(1./3.)						! Cube-root of N
+		gap=L/dble(Ncub)						! Gapsize between particles
+		y0(1+ind)=rmin+gap/2d0+(i-1)*gap	! x-positions
+		! y and z require different loops, so are done later
+		if (i .eq. N) fix = 1
 		cycle
-	
 	enddo
+	
+	if (fix .eq. 1) then
+		! Fix y-positions
+		do i=1,(Ncub*Ncub)
+			y0(2+3*Ncub*(i-1):2+3*(i*Ncub-1):3)=rmin+gap/2d0+(i-1)*gap
+		enddo
+		! Fix z-positions
+		do i=1,Ncub
+			y0(3+3*(Ncub*Ncub)*(i-1):3+3*(i*(Ncub*Ncub)-1):3)=rmin+gap/2d0+(i-1)*gap
+		enddo
+	endif
+	
 	! Assign initial velocities
 	y0(1+N3:) = 0d0	! Everything starts at rest
 	
@@ -415,9 +420,7 @@ subroutine Orbit(y0,y,f)
 			print '(F7.3,"%",A,F5.3,A)', t/ttot*1d2,' - t = ',t/tdyn,' tdyn'
 			! Write data to file
 			write(1,*) y(1:N3),t,dt,deltap,deltan
-!			if (mod(i,Np/5) .eq. 0 .AND. i .ne. 0) call SYSTEM("python Rhoplot.py")
-			call SYSTEM("python test.py")
-			stop
+!			if (mod(i,Np/5) .eq. 0 .AND. i .ne. 0) call SYSTEM("python Spacetime.py")
 			i=i+1
 		endif
 		! Integrate y using the RK4 technique
@@ -475,7 +478,7 @@ subroutine Timestep(r,v,dt,dtmin,magr)
 end subroutine Timestep
 
 !--------------------------------------------------------------------------------------------------
-subroutine LocalDensity(r,magr,deltap,deltan)
+subroutine LocalDensity(r,magr,deltap,deltan)	! ##### NEEDS FIX #####
 !--------------------------------------------------------------------------------------------------
 ! Subroutine that returns the "local density" of each body
 ! This is represented by a sphere containing the k nearest bodies to each body

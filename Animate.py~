@@ -2,12 +2,12 @@ import matplotlib.pylab as plt
 import sys
 from matplotlib import animation
 
-interval=40	# Interval between frames in ms
+interval=10	# Interval between frames in ms
 sel=1			# To skip data points (to speed up animation)
 rep=False	# Animation repeats?
 Multi=True	# Multiple copies of the central box?
 # Files to open
-File  = '26-07-18-N50PN'
+File  = 'Plot'
 Dat   = File+'_Data.dat'				# The Plot Data
 Signs = File+'_Signs.dat'			# Signs of the Masses
 
@@ -24,6 +24,8 @@ paras = line1.split()
 N=int(paras[0])
 # Distance along x-axis to edge of box from origin
 L=float(paras[1])/2.
+# Dynamical timescale
+tdyn=float(paras[2])
 # Plot range
 if (Multi):
 	lim=3.1*L
@@ -49,6 +51,7 @@ for i in xrange(N):
 # This should work automatically, with user only changing value of N
 x=[[0 for j in xrange(dp)] for i in xrange(N)]
 y=[[0 for j in xrange(dp)] for i in xrange(N)]
+t=[0 for i in xrange(dp)]
 
 for j,line in zip(xrange(dp),lines):
 	if (sel>1) and (j%sel==0):
@@ -57,6 +60,7 @@ for j,line in zip(xrange(dp),lines):
 	for i in xrange(N):
 		x[i][j]=float(data[3*i])
 		y[i][j]=float(data[3*i+1])
+	t[j]=float(data[-4])/tdyn
 
 if (sel>1):
 	for j in xrange(dp/sel):
@@ -68,7 +72,7 @@ if (sel>1):
 fig=plt.figure(figsize=(12,12))
 ax=plt.axes(xlim=(-lim,lim),ylim=(-lim,lim))
 
-plots = [ax.plot([],[],marker='.',color=colors[i])[0] for i in xrange(N)]
+plots  = [ax.plot([],[],marker='.',color=colors[i])[0] for i in xrange(N)]
 plots2 = [ax.plot([],[],marker='.',color=colors[i])[0] for i in xrange(N)]
 plots3 = [ax.plot([],[],marker='.',color=colors[i])[0] for i in xrange(N)]
 plots4 = [ax.plot([],[],marker='.',color=colors[i])[0] for i in xrange(N)]
@@ -78,15 +82,19 @@ plots7 = [ax.plot([],[],marker='.',color=colors[i])[0] for i in xrange(N)]
 plots8 = [ax.plot([],[],marker='.',color=colors[i])[0] for i in xrange(N)]
 plots9 = [ax.plot([],[],marker='.',color=colors[i])[0] for i in xrange(N)]
 
+time = ax.text(0.8,1.02,'',transform=ax.transAxes,fontsize=14)
+
 def init():
 	for plot in plots:
 		plot.set_data([],[])
-	return plots
+	time.set_text('')
+	return plots,time
 # Center Box
 def animate(j):
 	for i,plot in zip(xrange(N),plots):
 			plot.set_data([x[i][j]],[y[i][j]])
-	return plots
+	time.set_text("Time = "+str(t[j])[:5]+"tdyn")
+	return plots,time
 # Lower Center Box
 def animate2(j):
 	for i,plot in zip(xrange(N),plots2):
