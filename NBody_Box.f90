@@ -4,13 +4,13 @@ module Constants
 ! Module to keep constants in
 !--------------------------------------------------------------------------------------------------
 	implicit none
-	integer,parameter :: N=4**3				! Number of bodies
+	integer,parameter :: N=2**3				! Number of bodies
 !	##### Note to self, use values with an exact cube root when arranging in grid #####	
 	integer,parameter :: k=5					! Locate the kth nearest particle
 	integer,parameter :: Np=1d4				! Number of data points to write
 !	##### note to self, 1d4 not enough dp for N=50, anim stuttery #####
 	real*8,parameter :: Ntdyn=2d0				! Number of dynamical timescales to iterate over
-	character(len=99),parameter :: nam="GridTest_4CubPN"	! Start of File Name
+	character(len=99),parameter :: nam="Plot"	! Start of File Name
 	character(len=99),parameter :: dat=trim(nam)//"_Data.dat"	! Name of file to save data to
 	character(len=99),parameter :: mass=trim(nam)//"_Signs.dat"	! File to save mass signs to
 	real*8,parameter :: alpha=1d-3			! Dimensionless parameter for adjusted time step

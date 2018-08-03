@@ -3,16 +3,15 @@ import sys
 from matplotlib import animation
 
 interval=2	# Interval between frames in ms
-sel=1			# To skip data points (to speed up animation)
 rep=False	# Animation repeats?
 Multi=True	# Multiple copies of the central box?
-Save=True	# Save the animation?
+Save=False	# Save the animation?
 
 # Files to open
 File  = 'Plot'
-Dat   = File+'_Data.dat'				# The Plot Data
+Dat   = File+'_Data.dat'			# The Plot Data
 Signs = File+'_Signs.dat'			# Signs of the Masses
-Video = File+'_Animation'			# The video to save
+Video = File+'_Animation.mp4'		# The video to save (only save at home)
 
 # Open the output file 
 f = open(Dat,'r')
@@ -57,107 +56,69 @@ y=[[0 for j in xrange(dp)] for i in xrange(N)]
 t=[0 for i in xrange(dp)]
 
 for j,line in zip(xrange(dp),lines):
-	if (sel>1) and (j%sel==0):
-		continue
 	data = line.split()
 	for i in xrange(N):
 		x[i][j]=float(data[3*i])
 		y[i][j]=float(data[3*i+1])
 	t[j]=float(data[-4])/tdyn
 
-if (sel>1):
-	for j in xrange(dp/sel):
-		for i in xrange(N):
-			x[i].remove(0.)
-			y[i].remove(0.)
-
 # Setup the plot figure
 fig=plt.figure(figsize=(12,12))
 ax=plt.axes(xlim=(-lim,lim),ylim=(-lim,lim))
 
 plots  = [ax.plot([],[],marker='.',color=colors[i])[0] for i in xrange(N)]
-plots2 = [ax.plot([],[],marker='.',color=colors[i])[0] for i in xrange(N)]
-plots3 = [ax.plot([],[],marker='.',color=colors[i])[0] for i in xrange(N)]
-plots4 = [ax.plot([],[],marker='.',color=colors[i])[0] for i in xrange(N)]
-plots5 = [ax.plot([],[],marker='.',color=colors[i])[0] for i in xrange(N)]
-plots6 = [ax.plot([],[],marker='.',color=colors[i])[0] for i in xrange(N)]
-plots7 = [ax.plot([],[],marker='.',color=colors[i])[0] for i in xrange(N)]
-plots8 = [ax.plot([],[],marker='.',color=colors[i])[0] for i in xrange(N)]
-plots9 = [ax.plot([],[],marker='.',color=colors[i])[0] for i in xrange(N)]
+if (Multi):
+	plots2 = [ax.plot([],[],marker='.',color=colors[i])[0] for i in xrange(N)]
+	plots3 = [ax.plot([],[],marker='.',color=colors[i])[0] for i in xrange(N)]
+	plots4 = [ax.plot([],[],marker='.',color=colors[i])[0] for i in xrange(N)]
+	plots5 = [ax.plot([],[],marker='.',color=colors[i])[0] for i in xrange(N)]
+	plots6 = [ax.plot([],[],marker='.',color=colors[i])[0] for i in xrange(N)]
+	plots7 = [ax.plot([],[],marker='.',color=colors[i])[0] for i in xrange(N)]
+	plots8 = [ax.plot([],[],marker='.',color=colors[i])[0] for i in xrange(N)]
+	plots9 = [ax.plot([],[],marker='.',color=colors[i])[0] for i in xrange(N)]
 
 time = ax.text(0.8,1.02,'',transform=ax.transAxes,fontsize=14)
 
-def init():
-	for plot in plots:
-		plot.set_data([],[])
-	time.set_text('')
-	return plots,time
-# Center Box
-def animate(j):
-	for i,plot in zip(xrange(N),plots):
-			plot.set_data([x[i][j]],[y[i][j]])
-	time.set_text("Time = "+str(t[j])[:5]+"tdyn")
-	return plots,time
-# Lower Center Box
-def animate2(j):
-	for i,plot in zip(xrange(N),plots2):
-			plot.set_data([x[i][j]],[y[i][j]-2*L])
-	return plots2
-# Lower Right Box
-def animate3(j):
-	for i,plot in zip(xrange(N),plots3):
-			plot.set_data([x[i][j]+2*L],[y[i][j]-2*L])
-	return plots3
-# Lower Left Box
-def animate4(j):
-	for i,plot in zip(xrange(N),plots4):
-			plot.set_data([x[i][j]-2*L],[y[i][j]-2*L])
-	return plots4
-# Center Right Box
-def animate5(j):
-	for i,plot in zip(xrange(N),plots5):
-			plot.set_data([x[i][j]+2*L],[y[i][j]])
-	return plots5
-# Center Left Box
-def animate6(j):
-	for i,plot in zip(xrange(N),plots6):
-			plot.set_data([x[i][j]-2*L],[y[i][j]])
-	return plots6
-# Upper Center Box
-def animate7(j):
-	for i,plot in zip(xrange(N),plots7):
-			plot.set_data([x[i][j]],[y[i][j]+2*L])
-	return plots7
-# Upper Left Box
-def animate8(j):
-	for i,plot in zip(xrange(N),plots8):
-			plot.set_data([x[i][j]-2*L],[y[i][j]+2*L])
-	return plots8
-# Upper Right Box
-def animate9(j):
-	for i,plot in zip(xrange(N),plots9):
-			plot.set_data([x[i][j]+2*L],[y[i][j]+2*L])
-	return plots9
-	
-# Center Box
-anim  = animation.FuncAnimation(fig,animate,init_func=init,frames=dp,interval=interval,repeat=rep)
 if (Multi):
-	# Lower Center Box
-	anim2 = animation.FuncAnimation(fig,animate2,init_func=init,frames=dp,interval=interval,repeat=rep)
-	# Lower Right Box
-	anim3 = animation.FuncAnimation(fig,animate3,init_func=init,frames=dp,interval=interval,repeat=rep)
-	# Lower Left Box
-	anim4 = animation.FuncAnimation(fig,animate4,init_func=init,frames=dp,interval=interval,repeat=rep)
-	# Center Right Box
-	anim5 = animation.FuncAnimation(fig,animate5,init_func=init,frames=dp,interval=interval,repeat=rep)
-	# Center Left Box
-	anim6 = animation.FuncAnimation(fig,animate6,init_func=init,frames=dp,interval=interval,repeat=rep)
-	# Upper Center Box
-	anim7 = animation.FuncAnimation(fig,animate7,init_func=init,frames=dp,interval=interval,repeat=rep)
-	# Upper Left Box
-	anim8 = animation.FuncAnimation(fig,animate8,init_func=init,frames=dp,interval=interval,repeat=rep)
-	# Upper Right Box
-	anim9 = animation.FuncAnimation(fig,animate9,init_func=init,frames=dp,interval=interval,repeat=rep)
+	def init():
+		for plot,plot2,plot3,plot4,plot5,plot6,plot7,plot8,plot9 in	zip(plots,plots2,plots3,plots4,plots5,plots6,plots7,plots8,plots9):
+			plot.set_data([],[])
+			plot2.set_data([],[])
+			plot3.set_data([],[])
+			plot4.set_data([],[])
+			plot5.set_data([],[])
+			plot6.set_data([],[])
+			plot7.set_data([],[])
+			plot8.set_data([],[])
+			plot9.set_data([],[])
+		time.set_text('')
+		return plots,plots2,plots3,plots4,plots5,plots6,plots7,plots8,plots9,time
+	def animate(j):
+		for i,plot,plot2,plot3,plot4,plot5,plot6,plot7,plot8,plot9 in zip(xrange(N),plots,plots2,plots3,plots4,plots5,plots6,plots7,plots8,plots9):
+			plot.set_data([x[i][j]],[y[i][j]])
+			plot2.set_data([x[i][j]],[y[i][j]-2*L])
+			plot3.set_data([x[i][j]+2*L],[y[i][j]-2*L])
+			plot4.set_data([x[i][j]-2*L],[y[i][j]-2*L])
+			plot5.set_data([x[i][j]+2*L],[y[i][j]])
+			plot6.set_data([x[i][j]-2*L],[y[i][j]])
+			plot7.set_data([x[i][j]],[y[i][j]+2*L])
+			plot8.set_data([x[i][j]-2*L],[y[i][j]+2*L])
+			plot9.set_data([x[i][j]+2*L],[y[i][j]+2*L])
+		time.set_text("Time = "+str(t[j])[:5]+"tdyn")
+		return plots,plots2,plots3,plots4,plots5,plots6,plots7,plots8,plots9,time
+else:
+	def init():
+		for plot in plots:
+			plot.set_data([],[])
+		time.set_text('')
+		return plots,time
+	def animate(j):
+		for i,plot in zip(xrange(N),plots):
+				plot.set_data([x[i][j]],[y[i][j]])
+		time.set_text("Time = "+str(t[j])[:5]+"tdyn")
+		return plots,time
+	
+anim  = animation.FuncAnimation(fig,animate,init_func=init,frames=dp,interval=interval,repeat=rep)
 
 # Label the axes
 plt.xlabel('x [Mpc]')
@@ -173,7 +134,8 @@ ax.legend(handles=[pos_mass,neg_mass],bbox_to_anchor=(0.,1.075),loc=2,borderaxes
 
 if (Save):
 	# Save the animation
-	anim.save(Video+'.mp4',fps=60)#,extra_args=['-vcodec','libx264'])
+	anim.save('Animations/'+Video,fps=60)
+	print '=====File '+Video+' Saved====='
 else:
 	# Show the plot
 	plt.show()
