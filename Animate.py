@@ -2,14 +2,17 @@ import matplotlib.pylab as plt
 import sys
 from matplotlib import animation
 
-interval=10	# Interval between frames in ms
+interval=2	# Interval between frames in ms
 sel=1			# To skip data points (to speed up animation)
 rep=False	# Animation repeats?
 Multi=True	# Multiple copies of the central box?
+Save=True	# Save the animation?
+
 # Files to open
 File  = 'Plot'
 Dat   = File+'_Data.dat'				# The Plot Data
 Signs = File+'_Signs.dat'			# Signs of the Masses
+Video = File+'_Animation'			# The video to save
 
 # Open the output file 
 f = open(Dat,'r')
@@ -168,5 +171,9 @@ pos_mass = plt.scatter([],[],color='b',marker='.',label='+ve Mass')
 neg_mass = plt.scatter([],[],color='r',marker='.',label='-ve Mass')
 ax.legend(handles=[pos_mass,neg_mass],bbox_to_anchor=(0.,1.075),loc=2,borderaxespad=0.)
 
-# Show the plot
-plt.show()
+if (Save):
+	# Save the animation
+	anim.save(Video+'.mp4',fps=60)#,extra_args=['-vcodec','libx264'])
+else:
+	# Show the plot
+	plt.show()
