@@ -5,7 +5,7 @@ from matplotlib import rc
 # Save the plot?
 save=False
 # Plot the mirror copies of the data?
-Multi=False
+Multi=True
 # Filenames
 File  = 'Plot'
 Dat   = File+'_Data'				# The Plot Data

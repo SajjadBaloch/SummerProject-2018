@@ -4,13 +4,14 @@ module Constants
 ! Module to keep constants in
 !--------------------------------------------------------------------------------------------------
 	implicit none
-	integer,parameter :: N=2**3				! Number of bodies
-!	##### Note to self, use values with an exact cube root when arranging in grid #####	
+	integer,parameter :: N=4**3				! Number of bodies
+!	##### NOTE: use values with an exact cube root when arranging in grid	#####	
 	integer,parameter :: k=5					! Locate the kth nearest particle
+!	##### NOTE: k<N; k<Nneg for P-N mix of masses	##### 	
 	integer,parameter :: Np=1d4				! Number of data points to write
-!	##### note to self, 1d4 not enough dp for N=50, anim stuttery #####
+!	##### NOTE: 1d4 not enough dp for N=50, anim stuttery	#####
 	real*8,parameter :: Ntdyn=2d0				! Number of dynamical timescales to iterate over
-	character(len=99),parameter :: nam="Plot"	! Start of File Name
+	character(len=99),parameter :: nam="060818_PN"	! Start of File Name
 	character(len=99),parameter :: dat=trim(nam)//"_Data.dat"	! Name of file to save data to
 	character(len=99),parameter :: mass=trim(nam)//"_Signs.dat"	! File to save mass signs to
 	real*8,parameter :: alpha=1d-3			! Dimensionless parameter for adjusted time step
@@ -401,7 +402,7 @@ subroutine Orbit(y0,y,f)
 	rhobox = Mtot/L/L/L				![Msolar/Mpc^3]
 	tdyn   = 1d0/sqrt(rhobox*G)	![yrs]
 	ttot   = Ntdyn*tdyn				![yrs]
-	dtmax  = tdyn/1d5					![yrs]
+	dtmax  = ttot/Np					![yrs]
 	dtmin  = 1d3						![yrs]
 								  
 	open(1,file=trim(dat))
@@ -415,11 +416,12 @@ subroutine Orbit(y0,y,f)
 		! Write per specified time interval
 		if (t .ge. i*ttot/Np) then
 			! Calculate local densities
-!			call LocalDensity(r,magr,deltap,deltan)
+			call LocalDensity(r,magr,rhobox,deltap,deltan)
 			! Display % complete
 			print '(F7.3,"%",A,F5.3,A)', t/ttot*1d2,' - t = ',t/tdyn,' tdyn'
 			! Write data to file
 			write(1,*) y(1:N3),t,dt,deltap,deltan
+			! Plot data so far
 !			if (mod(i,Np/5) .eq. 0 .AND. i .ne. 0) call SYSTEM("python Spacetime.py")
 			i=i+1
 		endif
@@ -478,7 +480,7 @@ subroutine Timestep(r,v,dt,dtmin,magr)
 end subroutine Timestep
 
 !--------------------------------------------------------------------------------------------------
-subroutine LocalDensity(r,magr,deltap,deltan)	! ##### NEEDS FIX #####
+subroutine LocalDensity(r,magr,rhobox,deltap,deltan)
 !--------------------------------------------------------------------------------------------------
 ! Subroutine that returns the "local density" of each body
 ! This is represented by a sphere containing the k nearest bodies to each body
@@ -487,6 +489,7 @@ subroutine LocalDensity(r,magr,deltap,deltan)	! ##### NEEDS FIX #####
 	implicit none
 	real*8,dimension(3,N),intent(in) :: r			! Position vectors of each body
 	real*8,dimension(N,N),intent(in) :: magr		! Dummy variable
+	real*8,intent(in) :: rhobox						! Density of the sim box
 	real*8,intent(out) :: deltap,deltan				! Fractional density perturbations
 	real*8,allocatable :: rholocp(:),rholocn(:)	! Local density for each particle (+ve/-ve masses)
 	integer :: p											! Number of +ve particles
@@ -539,7 +542,8 @@ subroutine LocalDensity(r,magr,deltap,deltan)	! ##### NEEDS FIX #####
 		endif
 	enddo
 	! Mean local density
-	rhobar=(sum(rholocp)+sum(rholocn))/N
+!	rhobar=(sum(rholocp)+sum(rholocn))/N
+	rhobar=rhobox
 
 	! Calculate the Fractional density perturbation delta
 	! The density perturbation is the st.dev of the local densities from the mean

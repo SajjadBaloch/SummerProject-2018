@@ -5,13 +5,14 @@ from matplotlib import animation
 interval=2	# Interval between frames in ms
 rep=False	# Animation repeats?
 Multi=True	# Multiple copies of the central box?
-Save=False	# Save the animation?
+Save=True	# Save the animation?
 
 # Files to open
 File  = 'Plot'
 Dat   = File+'_Data.dat'			# The Plot Data
 Signs = File+'_Signs.dat'			# Signs of the Masses
 Video = File+'_Animation.mp4'		# The video to save (only save at home)
+fps=30	# Video FPS
 
 # Open the output file 
 f = open(Dat,'r')
@@ -134,7 +135,7 @@ ax.legend(handles=[pos_mass,neg_mass],bbox_to_anchor=(0.,1.075),loc=2,borderaxes
 
 if (Save):
 	# Save the animation
-	anim.save('Animations/'+Video,fps=60)
+	anim.save('Animations/'+Video,fps=fps)
 	print '=====File '+Video+' Saved====='
 else:
 	# Show the plot
