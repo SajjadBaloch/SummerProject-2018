@@ -5,9 +5,9 @@ from matplotlib import rc
 # Save the plot?
 save=False
 # Plot the mirror copies of the data?
-Multi=True
+Multi=False
 # Filenames
-File  = 'Plot'
+File  = 'BG2'
 Dat   = File+'_Data'				# The Plot Data
 Signs = File+'_Signs'			# Signs of the Masses
 if (Multi):

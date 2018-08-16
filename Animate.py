@@ -2,13 +2,13 @@ import matplotlib.pylab as plt
 import sys
 from matplotlib import animation
 
-interval=2	# Interval between frames in ms
+interval=10	# Interval between frames in ms
 rep=False	# Animation repeats?
 Multi=True	# Multiple copies of the central box?
-Save=True	# Save the animation?
+Save=False	# Save the animation?
 
 # Files to open
-File  = 'Plot'
+File  = '4cubAllPos'
 Dat   = File+'_Data.dat'			# The Plot Data
 Signs = File+'_Signs.dat'			# Signs of the Masses
 Video = File+'_Animation.mp4'		# The video to save (only save at home)

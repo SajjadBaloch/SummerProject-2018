@@ -5,8 +5,9 @@ from matplotlib import rc
 
 # Save the plot?
 save=False
+debug=True
 # Files To Open
-File  = 'Test2'
+File  = '4cubAllPos'
 Dat   = File+'_Data'
 Image = Dat +'_DensityPlot'	# Name of the Image to Save
 
@@ -46,8 +47,18 @@ for i,line in zip(xrange(dp),lines):
 	t[i]=float(data[-4])/tdyn
 	deltap[i]=float(data[-2])
 	deltan[i]=float(data[-1])
-	
+
 print '======Data Read======='
+
+if (debug):
+	f = open('Debugging.txt','w')
+	for i in xrange(dp):
+		s = str([t[i],deltap[i],deltan[i]])+'\n'
+		f.write(s)
+	f.close()
+	print 'Debug file written'
+	sys.exit()	
+
 print '===Generating Plots==='
 
 tmin  = min(t)
@@ -75,7 +86,7 @@ ax.plot(t,deltan,ls='solid',lw=1,color='r')
 ax.hlines(0.,tmin,tmax,linestyles='dashed',lw=1.2)
 
 #ax.set_xscale('log')
-#ax.set_yscale('log')
+ax.set_yscale('log')
 
 # Set axes labels
 plt.xlabel('t/tdyn',size=txt)

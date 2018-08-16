@@ -8,10 +8,10 @@ module Constants
 !	##### NOTE: use values with an exact cube root when arranging in grid	#####	
 	integer,parameter :: k=5					! Locate the kth nearest particle
 !	##### NOTE: k<N; k<Nneg for P-N mix of masses	##### 	
-	integer,parameter :: Np=1d4				! Number of data points to write
+	integer,parameter :: Np=5d4				! Number of data points to write
 !	##### NOTE: 1d4 not enough dp for N=50, anim stuttery	#####
 	real*8,parameter :: Ntdyn=2d0				! Number of dynamical timescales to iterate over
-	character(len=99),parameter :: nam="060818_PN"	! Start of File Name
+	character(len=99),parameter :: nam="BG2"	! Start of File Name
 	character(len=99),parameter :: dat=trim(nam)//"_Data.dat"	! Name of file to save data to
 	character(len=99),parameter :: mass=trim(nam)//"_Signs.dat"	! File to save mass signs to
 	real*8,parameter :: alpha=1d-3			! Dimensionless parameter for adjusted time step
@@ -151,7 +151,7 @@ subroutine init_cond(y0)
 		ind = vari(i)							! Iterating array index
 		fix = 0									! For fixing particle positions
 		! Select desired distribution
-		goto 30
+		goto 20
 		! Seperate +ve and -ve Mass particles within a random distribution
 10		if (M(i) .gt. 0d0) then 
 			y0(1+ind) = RNG(0d0,rmax)		! x-positions
@@ -345,7 +345,7 @@ subroutine Accelerations(y,acc,r,v,z)
 	enddo
 
 	soft = 0.98*dble(N)**(-0.28)
-	gravcoeff = a(z)!*a(z)
+	gravcoeff = a(z)*a(z)
 	dragcoeff = -2d0*H(z)
 	
 	! Calculate the resulting gravitational accelerations of each body [Msolar*Mpc/yr^2]
