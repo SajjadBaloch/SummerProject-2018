@@ -109,7 +109,7 @@ subroutine Set_Masses
 	! Assign a value to each mass [Msolar]
 	M = vol*1d13
 	! Set half the masses negative
-!	M(1+N/2:) = -M(1+N/2:)
+	M(1+N/2:) = -M(1+N/2:)
 	! Assign Masses according to desired signs
 	! To not violate equivalency principle, MP and MI must have same sign
 	MP = M				! Passive Gravitational Mass
