@@ -4,14 +4,14 @@ module Constants
 ! Module to keep constants in
 !--------------------------------------------------------------------------------------------------
 	implicit none
-	integer,parameter :: N=4**3				! Number of bodies
+	integer,parameter :: N=2**3				! Number of bodies
 !	##### NOTE: use values with an exact cube root when arranging in grid	#####	
-	integer,parameter :: k=5					! Locate the kth nearest particle
+	integer,parameter :: k=3					! Locate the kth nearest particle
 !	##### NOTE: k<N; k<Nneg for P-N mix of masses	##### 	
-	integer,parameter :: Np=5d4				! Number of data points to write
+	integer,parameter :: Np=2d4				! Number of data points to write
 !	##### NOTE: 1d4 not enough dp for N=50, anim stuttery	#####
 	real*8,parameter :: Ntdyn=2d0				! Number of dynamical timescales to iterate over
-	character(len=99),parameter :: nam="BG3"	! Start of File Name
+	character(len=99),parameter :: nam="Test"	! Start of File Name
 	character(len=99),parameter :: dat=trim(nam)//"_Data.dat"	! Name of file to save data to
 	character(len=99),parameter :: mass=trim(nam)//"_Signs.dat"	! File to save mass signs to
 	real*8,parameter :: alpha=1d-3			! Dimensionless parameter for adjusted time step
@@ -109,7 +109,7 @@ subroutine Set_Masses
 	! Assign a value to each mass [Msolar]
 	M = vol*1d13
 	! Set half the masses negative
-	M(1+N/2:) = -M(1+N/2:)
+!	M(1+N/2:) = -M(1+N/2:)
 	! Assign Masses according to desired signs
 	! To not violate equivalency principle, MP and MI must have same sign
 	MP = M				! Passive Gravitational Mass
@@ -151,7 +151,7 @@ subroutine init_cond(y0)
 		ind = vari(i)							! Iterating array index
 		fix = 0									! For fixing particle positions
 		! Select desired distribution
-		goto 30
+		goto 20
 		! Seperate +ve and -ve Mass particles within a random distribution
 10		if (M(i) .gt. 0d0) then 
 			y0(1+ind) = RNG(0d0,rmax)		! x-positions
@@ -422,7 +422,7 @@ subroutine Orbit(y0,y,f)
 			! Write data to file
 			write(1,*) y(1:N3),t,dt,deltap,deltan
 			! Plot data so far
-!			if (mod(i,Np/5) .eq. 0 .AND. i .ne. 0) call SYSTEM("python Spacetime.py")
+			if (mod(i,Np/5) .eq. 0 .AND. i .ne. 0) call SYSTEM("python Spacetime.py")
 			i=i+1
 		endif
 		! Integrate y using the RK4 technique
@@ -542,7 +542,6 @@ subroutine LocalDensity(r,magr,rhobox,deltap,deltan)
 		endif
 	enddo
 	! Mean local density
-!	rhobar=(sum(rholocp)+sum(rholocn))/N
 	rhobar=rhobox
 
 	! Calculate the Fractional density perturbation delta
@@ -627,7 +626,7 @@ real*8 function H(z)
 	real*8,parameter :: OmM=0.3				! Matter density parameter
 	real*8,parameter :: Omk=1d0-OmL-OmM		! Curvature term
 	
-	H=H0*SQRT(OmL+(OmM*a(z)+Omk)*a(z)*a(z))	
+	H=H0*SQRT(OmL+(OmM/a(z)+Omk)/a(z)/a(z))	
 
 end function H
 

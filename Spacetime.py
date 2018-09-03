@@ -7,7 +7,7 @@ save=False
 # Plot the mirror copies of the data?
 Multi=False
 # Filenames
-File  = '4cubAllPos'
+File  = 'Test'
 Dat   = File+'_Data'				# The Plot Data
 Signs = File+'_Signs'			# Signs of the Masses
 if (Multi):
